@@ -1,0 +1,35 @@
+socket :
+	Crée l'instance du serveur. Il crée un pipe avec un seul fd bidirectionnel(permet de lire et ecrire) accecible par le programme, il sera après relier au reseau avec bind();
+
+bind: relie le fd du socket a un port donnée, et un ip donnée (sur ton pc) pour la communcation reseau
+
+listen:
+	Met le socket en mode écoute : prêt à recevoir des connexions entrantes.Tu précises le nombre maximal de connexions en attente (backlog).
+
+pool:
+	écoute la communication sur les fd.
+
+Ensuite, on a donc un fd parler au serveur. C'est via ce dernier que un nouveau client va demande de se connecter
+Une fois connecter, le serveur va crée un fd, soit un canal de communcation via accept(). Une fois se canal crée, c'est via se dernier que le client communiquera au serveur pour ses requetes (ADD...).
+
+Chaque connexion d'un client est faite par TCP, qui lors d'un communcation transmet ses infos:
+	client IP → l’adresse IP du client
+
+	client port → le port source choisi aléatoirement par le client
+
+	server IP → l’adresse du serveur (fixée par bind)
+
+	server port → le port du serveur (fixé par bind)
+Ce qui permet donc d'assigner le fdclient individuellement. Car chaque client aura un TCP différent.
+
+pool:
+	Il prend une structure {fd, events, revents}.
+	Les event sont :	
+		-Si des données sont disponibles → il met le bit POLLIN dans revents
+
+		-Si le socket peut être écrit → il met POLLOUT
+
+		-Si erreur → POLLERR
+
+		-Si le client a fermé → POLLHUP
+	et donc on met dans event se que on veut detecter, puis pool remplie dans revents, l'event qui se passe.

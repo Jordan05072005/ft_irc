@@ -1,23 +1,21 @@
 #ifndef FT_IRC_HPP
 #define  FT_IRC_HPP
 
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <iostream>
-#include <fcntl.h>   // pour fcntl, F_SETFL, O_NONBLOCK
-#include <unistd.h>
+
+# include "./client.hpp"
 
 class ft_irc {
 	private:
-		int _serv_fd;
+		std::vector<pollfd> _fds;
+		std::vector<client> clients; 
 		int	_port_serv;
-		sockaddr_in addr;
+		sockaddr_in _addr;
 		void	bindAndListen(const sockaddr_in &addr);
 	public:
 		ft_irc();
 		ft_irc(int port);
 		void initSev();
-
+		void startSev();
 };
 
 

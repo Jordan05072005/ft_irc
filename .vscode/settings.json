@@ -55,8 +55,8 @@
   "C_Cpp_Runner.useLeakSanitizer": false,
   "C_Cpp_Runner.showCompilationTime": false,
   "C_Cpp_Runner.useLinkTimeOptimization": false,
-	"C_Cpp_Runner.msvcSecureNoWarnings": false,
-	"files.associations": {
+  "C_Cpp_Runner.msvcSecureNoWarnings": false,
+  "files.associations": {
 		"bit": "cpp",
 		"cctype": "cpp",
 		"clocale": "cpp",
@@ -87,6 +87,7 @@
 		"system_error": "cpp",
 		"tuple": "cpp",
 		"type_traits": "cpp",
-		"typeinfo": "cpp"
+		"typeinfo": "cpp",
+		"deque": "cpp"
 	}
 }
