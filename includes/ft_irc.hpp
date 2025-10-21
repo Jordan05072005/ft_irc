@@ -13,7 +13,7 @@ class ft_irc {
 		sockaddr_in	_addr;
 		void	bindAndListen(const sockaddr_in &addr);
 		void	delClient(int index);
-		int checkPass(client& client, int *i);
+		int checkPass(client& client, int *i, std::vector<std::string> mess);
 	public:
 		ft_irc();
 		ft_irc(int port, char *password);

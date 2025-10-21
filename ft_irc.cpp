@@ -95,8 +95,7 @@ void ft_irc::startSev(){
 	}
 }
 
-int ft_irc::checkPass(client& client, int *i){
-	std::vector<std::string> mess = split(client.getbuf(), ' ');
+int ft_irc::checkPass(client& client, int *i, std::vector<std::string> mess){
 	std::string err;
 	if (mess[0] == "PASS"){
 		mess[1].erase(mess[1].find_last_not_of("\r\n") + 1);
@@ -116,8 +115,9 @@ int ft_irc::checkPass(client& client, int *i){
 }
 
 void ft_irc::requeteGestion(client& client, int *i){
+	std::vector<std::string> mess = split(client.getbuf(), ' ');
 	if (!client.getlogin())
-		if (checkPass(client, i))
+		if (checkPass(client, i, mess))
 			return;
 	//if...
 }
