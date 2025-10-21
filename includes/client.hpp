@@ -1,36 +1,28 @@
-#ifndef CLIENT_HPP
-# define CLIENT_HPP
+#ifndef Client_HPP
+# define Client_HPP
 
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <iostream>
-#include <fcntl.h>   // pour fcntl, F_SETFL, O_NONBLOCK
-#include <unistd.h>
-#include <vector>
-#include <poll.h>
-#include <string>
-#include <stdlib.h>
+# include "header.hpp"
 
-
-
-class client {
+class Client
+{
 	private:
+		Client(void);
+
 		int _fd;
+		std::string _name;
 		sockaddr_in _addr;
 		socklen_t _len;
 		std::string _buff;
-		std::string _nick;
-		bool	_login;
-	public:
-		client();
-		client(int fd, sockaddr_in addr, socklen_t len);
-		client(const client& cpy);
-		client& operator=(const client& cpy);
-		~client();
 
-		int getfd();
+	public:
+		Client(int fd, sockaddr_in addr, socklen_t len);
+		Client(const Client& cpy);
+		Client& operator=(const Client& cpy);
+		~Client(void);
+
+		int getfd(void);
 		void setfd(int fd);
-		std::string& getbuf();
+		std::string& getbuf(void);
 		void setbuf(char *buf, int oct);
 		std::string& getnick();
 		void setnick(char *nick);
