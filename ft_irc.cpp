@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "includes/ft_irc.hpp"
+#include "includes/utils.hpp"
 
 ft_irc::ft_irc(){}
 
@@ -24,7 +25,6 @@ void ft_irc::bindAndListen(const sockaddr_in &addr){
 		throw std::runtime_error("Erreur lors du bind");
 	if (listen(this->_fds[0].fd, SOMAXCONN) < 0)
 		throw std::runtime_error("Erreur lors du listen");
-
 }
 
 static pollfd init_pollfd(int fd, short events, short revents){
@@ -87,15 +87,37 @@ void ft_irc::startSev(){
 				}
 				this->_clients[i - 1].setbuf(buf, oct);
 				std::cout << this->_clients[i - 1].getbuf() << std::endl;
-				this->requeteGestion(this->_clients[i - 1]);
+				this->requeteGestion(this->_clients[i - 1], &i);
 				// send(this->_fds[i].fd, buf, oct, 0);
 				this->_fds[i].revents = 0;
 			}
 		}
-		
 	}
 }
 
-void ft_irc::requeteGestion(client& client){
-	(void)client;
+int ft_irc::checkPass(client& client, int *i){
+	std::vector<std::string> mess = split(client.getbuf(), ' ');
+	std::string err;
+	if (mess[0] == "PASS"){
+		mess[1].erase(mess[1].find_last_not_of("\r\n") + 1);
+		if (mess[1] != this->_password){
+			err = ":irc 464 " +  client.getnick() + " :Password incorrect\r\n";
+			send(client.getfd(), err.c_str(), err.size(), 0);
+			return (this->delClient((*i)--), 1);
+		}
+		client.setlogin(true);
+	}
+	else{
+		err = ":irc 461 " + client.getnick() + " :Need password\r\n";
+		send(client.getfd(), err.c_str(), err.size(), 0);
+		return (this->delClient((*i)--), 1);
+	}
+	return 0;
+}
+
+void ft_irc::requeteGestion(client& client, int *i){
+	if (!client.getlogin())
+		if (checkPass(client, i))
+			return;
+	//if...
 }

@@ -13,13 +13,17 @@ class ft_irc {
 		sockaddr_in	_addr;
 		void	bindAndListen(const sockaddr_in &addr);
 		void	delClient(int index);
+		int checkPass(client& client, int *i);
 	public:
 		ft_irc();
 		ft_irc(int port, char *password);
 		void initSev();
 		void startSev();
-		void requeteGestion(client& client);
+		void requeteGestion(client& client, int *i);
 };
 
+#include <string>
+#include <vector>
+#include <sstream>
 
 #endif

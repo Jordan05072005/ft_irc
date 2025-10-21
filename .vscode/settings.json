@@ -101,6 +101,7 @@
 		"numeric": "cpp",
 		"optional": "cpp",
 		"random": "cpp",
-		"utility": "cpp"
+		"utility": "cpp",
+		"sstream": "cpp"
 	}
 }
