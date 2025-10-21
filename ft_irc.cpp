@@ -97,7 +97,7 @@ void ft_irc::startSev(){
 
 int ft_irc::checkPass(client& client, int *i, std::vector<std::string> mess){
 	std::string err;
-	if (mess[0] == "PASS"){
+	if (mess.size() == 2 && mess[0] == "PASS"){
 		mess[1].erase(mess[1].find_last_not_of("\r\n") + 1);
 		if (mess[1] != this->_password){
 			err = ":irc 464 " +  client.getnick() + " :Password incorrect\r\n";
