@@ -10,7 +10,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "includes/header.hpp"
+#include "includes/Server.hpp"
+
 
 Server::Server(void){}
 
@@ -97,7 +98,7 @@ void Server::startServ(void)
 				}
 				this->_clients[i - 1].setbuf(buf, oct);
 				std::cout << this->_clients[i - 1].getbuf() << std::endl;
-				this->requeteGestion(this->_clients[i - 1]);
+				this->requeteGestion(this->_clients[i - 1], &i);
 				// send(this->_fds[i].fd, buf, oct, 0);
 				this->_fds[i].revents = 0;
 			}
@@ -129,11 +130,11 @@ int Server::checkPass(Client& client, int *i, std::vector<std::string> mess)
 	return 0;
 }
 
-void Server::requeteGestion(Client& client, int *i)
-{
+void Server::requeteGestion(Client& client, int *i){
 	std::vector<std::string> mess = split(client.getbuf(), ' ');
 	if (!client.getlogin())
 		if (checkPass(client, i, mess))
 			return;
-	//if...
+	if (mess.size() == 2 && mess[0] == "NICK")
+		client.setnick(mess[1]);
 }
