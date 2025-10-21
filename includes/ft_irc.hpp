@@ -7,15 +7,17 @@
 class ft_irc {
 	private:
 		std::vector<pollfd> _fds;
-		std::vector<client> clients; 
+		std::vector<client> _clients; 
 		int	_port_serv;
-		sockaddr_in _addr;
+		sockaddr_in	_addr;
 		void	bindAndListen(const sockaddr_in &addr);
+		void	delClient(int index);
 	public:
 		ft_irc();
 		ft_irc(int port);
 		void initSev();
 		void startSev();
+		void requeteGestion(client& client);
 };
 
 

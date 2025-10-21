@@ -1,4 +1,4 @@
-SRC= main.c ft_irc.cpp
+SRC= main.c ft_irc.cpp client.cpp
 
 OBJ =${SRC:.c=.o}
 

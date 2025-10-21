@@ -88,6 +88,19 @@
 		"tuple": "cpp",
 		"type_traits": "cpp",
 		"typeinfo": "cpp",
-		"deque": "cpp"
+		"deque": "cpp",
+		"unordered_map": "cpp",
+		"array": "cpp",
+		"atomic": "cpp",
+		"cstdarg": "cpp",
+		"algorithm": "cpp",
+		"functional": "cpp",
+		"iterator": "cpp",
+		"memory": "cpp",
+		"memory_resource": "cpp",
+		"numeric": "cpp",
+		"optional": "cpp",
+		"random": "cpp",
+		"utility": "cpp"
 	}
 }

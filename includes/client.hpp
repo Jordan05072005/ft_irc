@@ -13,9 +13,22 @@
 
 class client {
 	private:
-		int fd;
-		std::string name;
-		sockaddr_in addr;
+		int _fd;
+		std::string _name;
+		sockaddr_in _addr;
+		socklen_t _len;
+		std::string _buff;
+	public:
+		client();
+		client(int fd, sockaddr_in addr, socklen_t len);
+		client(const client& cpy);
+		client& operator=(const client& cpy);
+		~client();
+
+		int getfd();
+		void setfd(int fd);
+		std::string& getbuf();
+		void setbuf(char *buf, int oct);
 };
 
 #endif
