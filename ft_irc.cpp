@@ -1,8 +1,21 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ft_irc.cpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: jguaglio <guaglio.jordan@gmail.com>        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/10/21 13:48:33 by jguaglio          #+#    #+#             */
+/*   Updated: 2025/10/21 13:48:33 by jguaglio         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "includes/ft_irc.hpp"
 
 ft_irc::ft_irc(){}
 
-ft_irc::ft_irc(int port) : _port_serv(port){
+ft_irc::ft_irc(int port, char *password) : _port_serv(port){
+	this->_password.assign(password);
 	this->initSev();
 }
 
