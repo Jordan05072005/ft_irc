@@ -10,8 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "includes/Server.hpp"
-
+#include "includes/header.hpp"
 
 Server::Server(void){}
 

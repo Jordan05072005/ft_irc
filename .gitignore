@@ -1,0 +1,6 @@
+# ignore les fichiers de compilation
+*.o
+*.exe
+
+# ignore configuration vscode partout
+.vscode/
