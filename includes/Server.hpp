@@ -20,7 +20,7 @@ class Server
 		sockaddr_in	_addr;
 
 		void	bindAndListen(sockaddr_in const& addr);
-		void	delClient(int& index);
+		void	delClient(int index);
 		void	requestHandler(Client& client, int* i);
 		int		checkPass(Client& client, int* i, std::vector<std::string> mess);
 

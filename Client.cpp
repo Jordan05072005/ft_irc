@@ -5,7 +5,7 @@ Client::Client(void){}
 
 Client::Client(int fd, sockaddr_in addr, socklen_t len) : _fd(fd), _addr(addr), _len(len), _nick("*"), _login(false){}
 
-Client::Client(const Client& cpy)
+Client::Client(const Client& cpy) : _login(false)
 {
 	*this = cpy;
 }
@@ -17,6 +17,8 @@ Client& Client::operator=(const Client& cpy)
 		this->_fd = cpy._fd;
 		this->_buff = cpy._buff;
 		this->_nick = cpy._nick;
+		this->_addr = cpy._addr;
+		this->_len = cpy._len;
 	}
 	// cpy.setFd(-1);
 	return (*this);
@@ -62,5 +64,5 @@ bool Client::getLogin(void)
 
 void Client::setLogin(bool e)
 {
-	this->_login = e; 
+	this->_login = e;
 }

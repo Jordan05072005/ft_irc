@@ -1,154 +1,156 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Server.cpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: jguaglio <guaglio.jordan@gmail.com>        +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/10/21 13:48:33 by jguaglio          #+#    #+#             */
-/*   Updated: 2025/10/21 13:48:33 by jguaglio         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
+	/* ************************************************************************** */
+	/*                                                                            */
+	/*                                                        :::      ::::::::   */
+	/*   Server.cpp                                         :+:      :+:    :+:   */
+	/*                                                    +:+ +:+         +:+     */
+	/*   By: jguaglio <guaglio.jordan@gmail.com>        +#+  +:+       +#+        */
+	/*                                                +#+#+#+#+#+   +#+           */
+	/*   Created: 2025/10/21 13:48:33 by jguaglio          #+#    #+#             */
+	/*   Updated: 2025/10/21 13:48:33 by jguaglio         ###   ########.fr       */
+	/*                                                                            */
+	/* ************************************************************************** */
 
-#include "includes/header.hpp"
+	#include "includes/header.hpp"
 
-Server::Server(void){}
+	Server::Server(void){}
 
-Server::Server(int port, std::string const& password) : _port_serv(port)
-{
-	this->_password.assign(password);
-	this->initServ();
-
-	return ;
-}
-
-static pollfd init_pollfd(int& fd, short& events, short& revents)
-{
-	pollfd p;
-
-	p.fd = fd;
-	p.events = events;
-	p.revents = revents;
-
-	return (p);
-}
-
-void Server::initServ(void)
-{
-	int opt = 1;
-
-	this->_fds.push_back(init_pollfd(socket(AF_INET, SOCK_STREAM, 0), POLLIN, 0)); // ipv4 et tcp
-	if (this->_fds[0].fd == -1)
-		throw std::runtime_error("Error: socket creation");
-	this->_addr.sin_family = AF_INET; // config pour ipv4
-	this->_addr.sin_port = htons(this->_port_serv);
-	this->_addr.sin_addr.s_addr = INADDR_ANY; // accepte tous les ports de connexion
-	fcntl(this->_fds[0].fd, F_SETFL, O_NONBLOCK);
-	setsockopt(this->_fds[0].fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-	this->bindAndListen(this->_addr);
-
-	return ;
-}
-
-void Server::bindAndListen(sockaddr_in const& addr)
-{
-	if (bind(this->_fds[0].fd, (sockaddr*)&addr, sizeof(addr)) < 0)
-		throw std::runtime_error("Error: bind socket");
-	if (listen(this->_fds[0].fd, SOMAXCONN) < 0)
-		throw std::runtime_error("Error: listen socket");
-
-	return ;
-}
-
-void Server::startServ(void)
-{
-	int					err;
-	sockaddr_in			client_addr;
-	socklen_t			client_len = sizeof(client_addr);
-	int 				client_fd;
-	char 				buf[512];
-	int 				oct;
-
-	while (1)
+	Server::Server(int port, std::string const& password) : _port_serv(port)
 	{
-		err = poll(this->_fds.data(), this->_fds.size(), -1);
-		if (err < 0)
-			throw std::runtime_error("Error: poll");
-		if (this->_fds[0].revents & POLLIN) // & => '=' en binaire
-		{
-			client_fd = accept(this->_fds[0].fd, (sockaddr*)&client_addr, &client_len);
-			if (client_fd < 0)
-				throw std::runtime_error("Error: accept");
-			fcntl(client_fd, F_SETFL, O_NONBLOCK);
-			this->_clients.push_back(Client(client_fd, client_addr, client_len));
-			this->_fds.push_back(init_pollfd(client_fd, POLLIN, 0));
-			this->_fds[0].revents = 0;
-		}
-		for (int i = 1; i < (int)this->_fds.size(); i++)
-		{
-			if (this->_fds[i].revents & POLLIN)
-			{
-				oct = recv(this->_fds[i].fd, buf, sizeof(buf), 0);
-				if (oct <= 0)
-				{
-					this->delClient(i--);
-					continue;
-				}
-				this->_clients[i - 1].setBuf(buf, oct);
-				std::cout << this->_clients[i - 1].getBuf() << std::endl;
-				this->requestHandler(this->_clients[i - 1], &i);
-				// send(this->_fds[i].fd, buf, oct, 0);
-				this->_fds[i].revents = 0;
-			}
-		}
-		
+		this->_password.assign(password);
+		this->initServ();
+
+		return ;
 	}
 
-	return ;
-}
-
-void Server::delClient(int& index)
-{
-	close(this->_clients[index - 1].getFd());
-	this->_clients.erase(this->_clients.begin() + (index - 1));
-	this->_fds.erase(this->_fds.begin() + index);
-	
-	return ;
-}
-
-void Server::requestHandler(Client& client, int *i)
-{
-	std::vector<std::string> mess = split(client.getBuf(), ' ');
-	if (!client.getLogin())
-		if (checkPass(client, i, mess))
-			return;
-	if (mess.size() == 2 && mess[0] == "NICK")
-		client.setNick(mess[1]);
-
-	return ;
-}
-
-int Server::checkPass(Client& client, int *i, std::vector<std::string> mess)
-{
-	std::string err;
-
-	if (mess.size() == 2 && mess[0] == "PASS")
+	static pollfd init_pollfd(int fd, short events, short revents)
 	{
-		mess[1].erase(mess[1].find_last_not_of("\r\n") + 1);
-		if (mess[1] != this->_password)
+		pollfd p;
+
+		p.fd = fd;
+		p.events = events;
+		p.revents = revents;
+
+		return (p);
+	}
+
+	void Server::initServ(void)
+	{
+		int opt = 1;
+
+		this->_fds.push_back(init_pollfd(socket(AF_INET, SOCK_STREAM, 0), POLLIN, 0)); // ipv4 et tcp
+		if (this->_fds[0].fd == -1)
+			throw std::runtime_error("Error: socket creation");
+		this->_addr.sin_family = AF_INET; // config pour ipv4
+		this->_addr.sin_port = htons(this->_port_serv);
+		this->_addr.sin_addr.s_addr = INADDR_ANY; // accepte tous les ports de connexion
+		fcntl(this->_fds[0].fd, F_SETFL, O_NONBLOCK);
+		setsockopt(this->_fds[0].fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+		this->bindAndListen(this->_addr);
+
+		return ;
+	}
+
+	void Server::bindAndListen(sockaddr_in const& addr)
+	{
+		if (bind(this->_fds[0].fd, (sockaddr*)&addr, sizeof(addr)) < 0)
+			throw std::runtime_error("Error: bind socket");
+		if (listen(this->_fds[0].fd, SOMAXCONN) < 0)
+			throw std::runtime_error("Error: listen socket");
+
+		return ;
+	}
+
+	void Server::startServ(void)
+	{
+		int					err;
+		sockaddr_in			client_addr;
+		socklen_t			client_len = sizeof(client_addr);
+		int 				client_fd;
+		char 				buf[512];
+		int 				oct;
+
+		while (1)
 		{
-			err = ":irc 464 " + client.getNick() + " :Incorrect password\r\n";
+			err = poll(this->_fds.data(), this->_fds.size(), -1);
+			if (err < 0)
+				throw std::runtime_error("Error: poll");
+			if (this->_fds[0].revents & POLLIN) // & => '=' en binaire
+			{
+				client_fd = accept(this->_fds[0].fd, (sockaddr*)&client_addr, &client_len);
+				if (client_fd < 0)
+					throw std::runtime_error("Error: accept");
+				fcntl(client_fd, F_SETFL, O_NONBLOCK);
+				this->_clients.push_back(Client(client_fd, client_addr, client_len));
+				std::cout << "after " << this->_clients.size()<< std::endl;
+				this->_fds.push_back(init_pollfd(client_fd, POLLIN, 0));
+				this->_fds[0].revents = 0;
+				std::cout << "new" << std::endl;
+			}
+			for (int i = 1; i < (int)this->_fds.size(); i++)
+			{
+				if (this->_fds[i].revents & POLLIN)
+				{
+					oct = recv(this->_fds[i].fd, buf, sizeof(buf), 0);
+					if (oct <= 0)
+					{
+						this->delClient(i--);
+						continue;
+					}
+					this->_clients[i - 1].setBuf(buf, oct);
+					std::cout << this->_clients[i - 1].getBuf() << std::endl;
+					this->requestHandler(this->_clients[i - 1], &i);
+					// send(this->_fds[i].fd, buf, oct, 0);
+					this->_fds[i].revents = 0;
+				}
+			}
+			
+		}
+		return ;
+	}
+
+	void Server::delClient(int index)
+	{
+		std::cout << "i" << std::endl;
+		std::cout << index << std::endl;
+		close(this->_clients[index - 1].getFd());
+		this->_clients.erase(this->_clients.begin() + (index - 1));
+		this->_fds.erase(this->_fds.begin() + index);
+		return ;
+	}
+
+	void Server::requestHandler(Client& client, int *i)
+	{
+		std::vector<std::string> mess = split(client.getBuf(), ' ');
+		if (!client.getLogin())
+			if (checkPass(client, i, mess))
+				return;
+		if (mess.size() == 2 && mess[0] == "NICK")
+			client.setNick(mess[1]);
+
+		return ;
+	}
+
+	int Server::checkPass(Client& client, int *i, std::vector<std::string> mess)
+	{
+		std::string err;
+
+		if (mess.size() == 2 && mess[0] == "PASS")
+		{
+			mess[1].erase(mess[1].find_last_not_of("\r\n") + 1);
+			if (mess[1] != this->_password)
+			{
+				err = ":irc 464 " + client.getNick() + " :Incorrect password\r\n";
+				send(client.getFd(), err.c_str(), err.size(), 0);
+				return (this->delClient((*i)--), 1);
+			}
+			client.setLogin(true);
+		}
+		else
+		{
+			err = ":irc 461 " + client.getNick() + " :Password needed\r\n";
 			send(client.getFd(), err.c_str(), err.size(), 0);
 			return (this->delClient((*i)--), 1);
 		}
-		client.setLogin(true);
-	}
-	else
-	{
-		err = ":irc 461 " + client.getNick() + " :Password needed\r\n";
-		send(client.getFd(), err.c_str(), err.size(), 0);
-		return (this->delClient((*i)--), 1);
-	}
 
-	return (0);
-}
+		return (0);
+	}
