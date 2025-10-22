@@ -13,7 +13,10 @@ class Client
 		socklen_t 	_len;
 		std::string _buff;
 		std::string _nick;
-		bool		_login;
+		std::string _ident;
+		std::string _realname;
+		std::string	_host;
+		int		_etat; // etat = 1 -> login, etat = 2 -> register
 
 	public:
 		Client(int fd, sockaddr_in addr, socklen_t len);
@@ -27,8 +30,14 @@ class Client
 		void 			setBuf(char *buf, int oct);
 		std::string& 	getNick(void);
 		void 			setNick(std::string& nick);
-		bool 			getLogin();
-		void 			setLogin(bool e);
+		bool 			getEtat();
+		void 			setEtat(int e);
+		std::string&	getIdent();
+		void 					setIdent(std::string& indent);
+		std::string&	getRealName();
+		void 					setRealName(std::string& name);
+		std::string&	getHost();
+		void 					setHost(std::string& host);
 };
 
 #endif

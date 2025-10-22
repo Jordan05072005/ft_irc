@@ -3,9 +3,13 @@
 
 Client::Client(void){}
 
-Client::Client(int fd, sockaddr_in addr, socklen_t len) : _fd(fd), _addr(addr), _len(len), _nick("*"), _login(false){}
+Client::Client(int fd, sockaddr_in addr, socklen_t len) : _fd(fd), _addr(addr), _len(len), _etat(0){
+	char ip_str[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(addr.sin_addr), ip_str, INET_ADDRSTRLEN);
+	this->_host = ip_str;
+}
 
-Client::Client(const Client& cpy) : _login(false)
+Client::Client(const Client& cpy) : _etat(0)
 {
 	*this = cpy;
 }
@@ -57,12 +61,46 @@ void Client::setNick(std::string& nick)
 	this->_nick = nick; 
 }
 
-bool Client::getLogin(void)
+bool Client::getEtat(void)
 {
-	return (this->_login);
+	return (this->_etat);
 }
 
-void Client::setLogin(bool e)
+void Client::setEtat(int e)
 {
-	this->_login = e;
+	this->_etat = e;
 }
+
+std::string& Client::getIdent(void)
+{
+	return (this->_ident);
+}
+
+void Client::setIdent(std::string& ident)
+{
+	this->_ident = ident;
+}
+
+
+std::string& Client::getRealName(void)
+{
+	return (this->_realname);
+}
+
+void Client::setRealName(std::string& name)
+{
+	this->_realname= name;
+}
+
+
+std::string& Client::getHost(void)
+{
+	return (this->_host);
+}
+
+void Client::setHost(std::string& host)
+{
+	this->_host = host;
+}
+
+//nick!~ident@host
