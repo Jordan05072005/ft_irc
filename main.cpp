@@ -17,9 +17,9 @@ int	parsing(std::string port, std::string password)
 	for (int i = 0; i < port.length(); ++i)
 	{
 		if (std::isdigit(port[i]) == false)
-			return 1;
+			return (1);
 	}
-	return 0;
+	return (0);
 }
 
 int main(int ac, char **av)
@@ -27,7 +27,7 @@ int main(int ac, char **av)
 	if (ac != 3)
 	{
 		std::cout << "Usage : <port> <password>" << std::endl;
-		return 1;
+		return (1);
 	}
 
 	std::string port = av[1];
@@ -37,27 +37,28 @@ int main(int ac, char **av)
 		case 1 :
 		{
 			std::cerr << "Error : invalid port" << std::endl;
-			return 1;
+			return (1);
 		}
 
 		case 2 :
 		{
 			std::cerr << "Error : invalid password" << std::endl;
-			return 1;
+			return (1);
 		}
 
 		default :
-			break;
+			break ;
 	}
 
 	try
 	{
-		Server serv(std::atoi(av[1]), av[2]);
+		Server serv(std::atoi(av[1]), password);
 		serv.startServ();
 	}
-	catch (std::exception &e)
+	catch (std::exception& e)
 	{
 		std::cerr << e.what() << std::endl;
 	}
-	return 0;
+
+	return (0);
 }

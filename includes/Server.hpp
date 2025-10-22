@@ -14,19 +14,20 @@ class Server
 		std::vector<pollfd> _fds;
 		std::vector<Client> _clients; 
 
-		int	_port_serv;
-		std::string _password;
+		int			_port_serv;
+		std::string	_password;
 
 		sockaddr_in	_addr;
 
-		void	bindAndListen(const sockaddr_in &addr);
-		void	delClient(int index);
-		int checkPass(Client& client, int *i, std::vector<std::string> mess);
+		void	bindAndListen(sockaddr_in const& addr);
+		void	delClient(int& index);
+		void	requestHandler(Client& client, int* i);
+		int		checkPass(Client& client, int* i, std::vector<std::string> mess);
+
 	public:
-		Server(int port, char *password);
+		Server(int port, std::string const& password);
 
 		void startServ(void);
-		void requeteGestion(Client& client, int *i);
 };
 
 

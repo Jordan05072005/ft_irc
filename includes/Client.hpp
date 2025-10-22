@@ -21,14 +21,14 @@ class Client
 		Client& operator=(const Client& cpy);
 		~Client(void);
 
-		int				getfd(void);
-		void			setfd(int fd);
-		std::string&	getbuf(void);
-		void 			setbuf(char *buf, int oct);
-		std::string& 	getnick(void);
-		void 			setnick(std::string& nick);
-		bool 			getlogin();
-		void 			setlogin(bool e);
+		int				getFd(void);
+		void			setFd(int fd);
+		std::string&	getBuf(void);
+		void 			setBuf(char *buf, int oct);
+		std::string& 	getNick(void);
+		void 			setNick(std::string& nick);
+		bool 			getLogin();
+		void 			setLogin(bool e);
 };
 
 #endif

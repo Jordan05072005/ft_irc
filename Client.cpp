@@ -1,4 +1,3 @@
-
 #include "includes/header.hpp"
 
 
@@ -19,49 +18,49 @@ Client& Client::operator=(const Client& cpy)
 		this->_buff = cpy._buff;
 		this->_nick = cpy._nick;
 	}
-	// cpy.setfd(-1);
+	// cpy.setFd(-1);
 	return (*this);
 }
 
 Client::~Client(void){}
 
-int Client::getfd(void)
+int Client::getFd(void)
 {
 	return (this->_fd);
 }
 
-void Client::setfd(int fd)
+void Client::setFd(int fd)
 {
 	this->_fd = fd;
 }
 
-std::string& Client::getbuf(void)
+std::string& Client::getBuf(void)
 {
 	return (this->_buff);
 }
 
-void Client::setbuf(char *buf, int oct)
+void Client::setBuf(char *buf, int oct)
 {
 	if (oct > 0)
 		this->_buff.assign(buf, oct); 
 }
 
-std::string& Client::getnick(void)
+std::string& Client::getNick(void)
 {
 	return (this->_nick);
 }
 
-void Client::setnick(std::string& nick)
+void Client::setNick(std::string& nick)
 {
 	this->_nick = nick; 
 }
 
-bool Client::getlogin(void)
+bool Client::getLogin(void)
 {
 	return (this->_login);
 }
 
-void Client::setlogin(bool e)
+void Client::setLogin(bool e)
 {
 	this->_login = e; 
 }
