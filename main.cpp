@@ -53,7 +53,6 @@ int main(int ac, char **av)
 	try
 	{
 		Server serv(std::atoi(av[1]), password);
-		serv.startServ();
 	}
 	catch (std::exception& e)
 	{
