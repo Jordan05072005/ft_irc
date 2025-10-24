@@ -5,20 +5,23 @@
 
 class Client
 {
-	private:
+	private :
 		Client(void);
 
-		int 		_fd;
-		sockaddr_in _addr;
-		socklen_t 	_len;
+		//? enlever fd et len, inutiles ?, si oui rectifier Server::delClient()
+		int 		_fd; // client socket
+		sockaddr_in _addr; // données du client récupérées liées au socket client
+		socklen_t 	_len; // taille de sockaddr_in
+
 		std::string _buff;
 		std::string _nick;
 		std::string _ident;
 		std::string _realname;
 		std::string	_host;
-		int		_etat; // etat = 1 -> login, etat = 2 -> register
+		//? remplacer par state
+		int			_etat; // etat = 1 -> login, etat = 2 -> register
 
-	public:
+	public :
 		Client(int fd, sockaddr_in addr, socklen_t len);
 		Client(const Client& cpy);
 		Client& operator=(const Client& cpy);
@@ -32,12 +35,12 @@ class Client
 		void 			setNick(std::string& nick);
 		int 			getEtat();
 		void 			setEtat(int e);
-		std::string&	getIdent();
-		void 					setIdent(std::string& indent);
-		std::string&	getRealName();
-		void 					setRealName(std::string& name);
-		std::string&	getHost();
-		void 					setHost(std::string& host);
+		std::string&	getIdent(void);
+		void 			setIdent(std::string& indent);
+		std::string&	getRealName(void);
+		void 			setRealName(std::string& name);
+		std::string&	getHost(void);
+		void 			setHost(std::string& host);
 };
 
 #endif

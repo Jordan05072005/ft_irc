@@ -3,7 +3,8 @@
 
 Client::Client(void){}
 
-Client::Client(int fd, sockaddr_in addr, socklen_t len) : _fd(fd), _addr(addr), _len(len), _etat(0){
+Client::Client(int fd, sockaddr_in addr, socklen_t len) : _fd(fd), _addr(addr), _len(len), _etat(0)
+{
 	char ip_str[INET_ADDRSTRLEN];
 	inet_ntop(AF_INET, &(addr.sin_addr), ip_str, INET_ADDRSTRLEN);
 	this->_host = ip_str;
