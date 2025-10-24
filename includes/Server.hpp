@@ -22,17 +22,20 @@ class Server
 		std::string	_password;
 		sockaddr_in	_addr;
 		std::vector<t_cmd> _cmd;
+		// std::vector<Channel> channel;
 
 		void	initServ(void);
 		void	bindAndListen(sockaddr_in const& addr);
 		void	delClient(int index);
 		int		requestHandler(Client& client);
 		void	send_error(std::string err, Client& client, std::string body);
+		void	send_mess(std::string channel, std::string cmd, std::string mess, Client& c);
 		int		errorEtat(int etat, std::string& cmd, Client &client);
 		int		uniqueNick(std::string &nick);
 		int		checkPass(Client& client, std::vector<std::string>& mess);
 		int		checkNick(Client& client, std::vector<std::string>& mess);
 		int		checkUser(Client& client, std::vector<std::string>& mess);
+		int		checkQuit(Client& client, std::vector<std::string>& mess);
 	public:
 		Server(int port, std::string const& password);
 		void startServ(void);

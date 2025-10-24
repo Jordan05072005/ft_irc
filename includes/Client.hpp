@@ -30,7 +30,7 @@ class Client
 		void 			setBuf(char *buf, int oct);
 		std::string& 	getNick(void);
 		void 			setNick(std::string& nick);
-		bool 			getEtat();
+		int 			getEtat();
 		void 			setEtat(int e);
 		std::string&	getIdent();
 		void 					setIdent(std::string& indent);

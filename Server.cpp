@@ -41,6 +41,7 @@ Server::Server(int port, std::string const& password) : _port_serv(port)
 	this->_cmd.push_back(init_cmd("PASS", &Server::checkPass, 0));
 	this->_cmd.push_back(init_cmd("NICK", &Server::checkNick, 1));
 	this->_cmd.push_back(init_cmd("USER", &Server::checkUser, 1));
+	this->_cmd.push_back(init_cmd("QUIT", &Server::checkQuit, 1));
 	// this->_cmd[0] = init_cmd("PASS", this->checkPass, 1);
 	// this->_cmd[0] = init_cmd("PASS", this->checkPass, 0);
 	// this->_cmd[0] = init_cmd("PASS", this->checkPass, 0);
@@ -163,6 +164,31 @@ void Server::send_error(std::string err, Client& client, std::string body){
 	send(client.getFd(), err_mess.c_str(), err_mess.size(), 0);
 }
 
+void Server::send_mess(std::string channel, std::string cmd, std::string mess, Client& c)
+{
+	std::stringstream ss;
+	std::string message;
+
+	if (channel.empty()){
+		ss << ":" << (c.getNick().empty() ? "*" : c.getNick()) << "!~" << (c.getIdent().empty() ? "*" : c.getIdent()) << "@" << c.getHost() << " " << cmd << " :" << mess << "\r\n";
+		message = ss.str();
+		for (size_t i = 0; i < this->_clients.size(); i++){
+			send(this->_clients[i].getFd(), message.c_str(), message.size(), 0);
+		}
+		return ;
+	}
+	ss << ":" << (c.getNick().empty() ? "*" : c.getNick()) << "!~" << (c.getIdent().empty() ? "*" : c.getIdent()) << "@" << c.getHost() << " " << cmd << " #" << channel << " :" << mess << "\r\n";
+	message = ss.str();
+	// for (size_t i = 0; i < this->channel; i++){
+	// 	if (this->channel[i] == channel);
+	// 		this->channel[i].send_mess(message)
+	// }
+}
+
+// :john!~john@127.0.0.1 PRIVMSG #general :Salut tout le monde ! 
+// piur chanel
+// :nick!user@host QUIT :Client Quit
+
 int Server::requestHandler(Client& client)
 {
 	std::vector<std::string> mess = split(client.getBuf(), ' ');
@@ -177,8 +203,6 @@ int Server::requestHandler(Client& client)
 	}
 	return (this->send_error("462 "+ mess[0], client, "Unknown command"), 0);
 }
-
-
 
 int Server::checkPass(Client& client, std::vector<std::string>& mess)
 {
@@ -230,3 +254,23 @@ int Server::checkUser(Client& client, std::vector<std::string>& mess){
 		client.setEtat(client.getEtat() + 1);
 	return 0;
 }
+
+int Server::checkQuit(Client& client, std::vector<std::string>& mess){
+	std::string message;
+	if (mess.size() == 1)
+		message = "Client Quit";
+	else{
+		if (mess[1][0] != ':')
+			message = mess[1];
+		else{
+			for (int i = 1; i < (int)mess.size(); i++){
+				message += mess[i];
+			}
+		}
+	}
+	if (client.getEtat() < 2)
+		return (1);
+	this->send_mess("", mess[0], message, client);
+	return (1);
+}
+

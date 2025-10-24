@@ -61,7 +61,7 @@ void Client::setNick(std::string& nick)
 	this->_nick = nick; 
 }
 
-bool Client::getEtat(void)
+int Client::getEtat(void)
 {
 	return (this->_etat);
 }
