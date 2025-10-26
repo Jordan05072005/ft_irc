@@ -5,6 +5,7 @@
 
 
 class Client;
+class Server;
 
 
 typedef struct cmd
@@ -39,7 +40,7 @@ class Server // TODO : forme canonique
 		void	send_mess(std::string channel, std::string cmd, std::string mess, Client& c);
 		int		errorEtat(int etat, std::string& cmd, Client &client);
 		int		uniqueNick(std::string &nick);
-		int		checkPass(Client& client, std::vector<std::string> mess);
+		int		checkPass(Client& client, std::vector<std::string>& mess);
 		int		checkNick(Client& client, std::vector<std::string>& mess);
 		int		checkUser(Client& client, std::vector<std::string>& mess);
 		int		checkQuit(Client& client, std::vector<std::string>& mess);

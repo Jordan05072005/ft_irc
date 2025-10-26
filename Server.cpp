@@ -12,28 +12,6 @@
 
 #include "includes/header.hpp"
 
-Server::Server(void){}
-
-Server::Server(int port, std::string const& password) : _port_serv(port)
-{
-	this->_password.assign(password);
-	this->initServ();
-	this->_cmd.push_back(init_cmd("PASS", &Server::checkPass, 0));
-	this->_cmd.push_back(init_cmd("NICK", &Server::checkNick, 1));
-	this->_cmd.push_back(init_cmd("USER", &Server::checkUser, 1));
-	this->_cmd.push_back(init_cmd("QUIT", &Server::checkQuit, 1));
-	// this->_cmd[0] = init_cmd("PASS", this->checkPass, 1);
-	// this->_cmd[0] = init_cmd("PASS", this->checkPass, 0);
-	// this->_cmd[0] = init_cmd("PASS", this->checkPass, 0);
-	// this->_cmd[0] = init_cmd("PASS", this->checkPass, 0);
-	// this->_cmd[0] = init_cmd("PASS", this->checkPass, 0);
-	// this->_cmd[0] = init_cmd("PASS", this->checkPass, 0);
-	// this->_cmd[0] = init_cmd("PASS", this->checkPass, 0);
-	// this->_cmd[0] = init_cmd("PASS", this->checkPass, 0);
-	this->run();
-
-	return ;
-}
 
 static t_cmd init_cmd(std::string n, int (Server::*func)(Client&, std::vector<std::string>&), int etat)
 {
@@ -55,6 +33,29 @@ static pollfd init_pollfd(int fd, short events, short revents)
 	p.revents = revents; // activation ou non des évènements, le kernell le remplie, 0 par défaut
 
 	return (p);
+}
+
+Server::Server(void){}
+
+Server::Server(int port, std::string const& password) : _port_serv(port)
+{
+	this->_password.assign(password);
+	this->initServ();
+	this->_cmd.push_back(init_cmd("PASS", &Server::checkPass, 0));
+	this->_cmd.push_back(init_cmd("NICK", &Server::checkNick, 1));
+	this->_cmd.push_back(init_cmd("USER", &Server::checkUser, 1));
+	this->_cmd.push_back(init_cmd("QUIT", &Server::checkQuit, 1));
+	// this->_cmd[0] = init_cmd("PASS", this->checkPass, 1);
+	// this->_cmd[0] = init_cmd("PASS", this->checkPass, 0);
+	// this->_cmd[0] = init_cmd("PASS", this->checkPass, 0);
+	// this->_cmd[0] = init_cmd("PASS", this->checkPass, 0);
+	// this->_cmd[0] = init_cmd("PASS", this->checkPass, 0);
+	// this->_cmd[0] = init_cmd("PASS", this->checkPass, 0);
+	// this->_cmd[0] = init_cmd("PASS", this->checkPass, 0);
+	// this->_cmd[0] = init_cmd("PASS", this->checkPass, 0);
+	this->run();
+
+	return ;
 }
 
 // création socket de base pour connexions client
@@ -244,6 +245,14 @@ int Server::checkPass(Client& client, std::vector<std::string>& mess)
 	client.setEtat(client.getEtat() + 1);
 
 	return (0);
+}
+
+int Server::uniqueNick(std::string &nick){
+	for (size_t i = 0; i < this->_clients.size(); i++){
+		if (this->_clients[i].getNick() == nick)
+			return 1;
+	}
+	return 0;
 }
 
 int Server::checkNick(Client& client, std::vector<std::string>& mess)
