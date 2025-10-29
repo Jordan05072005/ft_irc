@@ -12,29 +12,6 @@
 
 #include "includes/header.hpp"
 
-
-static t_cmd init_cmd(std::string n, int (Server::*func)(Client&, std::vector<std::string>&), int etat)
-{
-	t_cmd p;
-
-	p.name = n;
-	p.pars = func;
-	p.etat = etat;
-	return (p);
-}
-
-// initialisation de struct pollfd pour chaque socket
-static pollfd init_pollfd(int fd, short events, short revents)
-{
-	pollfd p;
-
-	p.fd = fd; // fd ouvert par le socket
-	p.events = events; // évènements à surveiller, POLLIN = true/false if must read in fd
-	p.revents = revents; // activation ou non des évènements, le kernell le remplie, 0 par défaut
-
-	return (p);
-}
-
 Server::Server(void){}
 
 Server::Server(int port, std::string const& password) : _port_serv(port)
@@ -56,6 +33,28 @@ Server::Server(int port, std::string const& password) : _port_serv(port)
 	this->run();
 
 	return ;
+}
+
+static t_cmd init_cmd(std::string n, int (Server::*func)(Client&, std::vector<std::string>&), int etat)
+{
+	t_cmd p;
+
+	p.name = n;
+	p.pars = func;
+	p.etat = etat;
+	return (p);
+}
+
+// initialisation de struct pollfd pour chaque socket
+static pollfd init_pollfd(int fd, short events, short revents)
+{
+	pollfd p;
+
+	p.fd = fd; // fd ouvert par le socket
+	p.events = events; // évènements à surveiller, POLLIN = true/false if must read in fd
+	p.revents = revents; // activation ou non des évènements, le kernell le remplie, 0 par défaut
+
+	return (p);
 }
 
 // création socket de base pour connexions client
@@ -196,18 +195,21 @@ void Server::send_mess(std::string channel, std::string cmd, std::string mess, C
 	std::stringstream ss;
 	std::string message;
 
-	if (channel.empty()){
+	if (channel.empty())
+	{
 		ss << ":" << (c.getNick().empty() ? "*" : c.getNick()) << "!~" << (c.getIdent().empty() ? "*" : c.getIdent()) << "@" << c.getHost() << " " << cmd << " :" << mess << "\r\n";
 		message = ss.str();
-		for (size_t i = 0; i < this->_clients.size(); i++){
+		for (size_t i = 0; i < this->_clients.size(); i++)
+		{
 			send(this->_clients[i].getFd(), message.c_str(), message.size(), 0);
 		}
 		return ;
 	}
 	ss << ":" << (c.getNick().empty() ? "*" : c.getNick()) << "!~" << (c.getIdent().empty() ? "*" : c.getIdent()) << "@" << c.getHost() << " " << cmd << " #" << channel << " :" << mess << "\r\n";
 	message = ss.str();
-	// for (size_t i = 0; i < this->channel; i++){
-	// 	if (this->channel[i] == channel);
+	// for (size_t i = 0; i < this->channel; i++)
+	//{
+	// 	if (this->channel[i] == channel)
 	// 		this->channel[i].send_mess(message)
 	// }
 }
@@ -216,6 +218,7 @@ void Server::send_mess(std::string channel, std::string cmd, std::string mess, C
 // piur chanel
 // :nick!user@host QUIT :Client Quit
 
+// gestion des données reçues
 int Server::requestHandler(Client& client)
 {
 	std::vector<std::string> mess = split(client.getBuf(), ' ');
@@ -233,6 +236,17 @@ int Server::requestHandler(Client& client)
 	return (this->send_error("462 "+ mess[0], client, "Unknown command"), 0);
 }
 
+int	Server::uniqueNick(std::string &nick)
+{
+	for (size_t i = 0; i < this->_clients.size(); i++)
+	{
+		if (this->_clients[i].getNick() == nick)
+			return 1;
+	}
+	return 0;
+}
+
+// vérification du mdp
 int Server::checkPass(Client& client, std::vector<std::string>& mess)
 {
 	std::string err;
@@ -245,14 +259,6 @@ int Server::checkPass(Client& client, std::vector<std::string>& mess)
 	client.setEtat(client.getEtat() + 1);
 
 	return (0);
-}
-
-int Server::uniqueNick(std::string &nick){
-	for (size_t i = 0; i < this->_clients.size(); i++){
-		if (this->_clients[i].getNick() == nick)
-			return 1;
-	}
-	return 0;
 }
 
 int Server::checkNick(Client& client, std::vector<std::string>& mess)
@@ -276,7 +282,7 @@ int Server::checkUser(Client& client, std::vector<std::string>& mess)
 
 	if (!client.getRealName().empty() || !client.getIdent().empty())
 		return (this->send_error("462", client, "Unauthorized command (already registered)"), 0);
-	if (mess.size() < 5)
+	if (mess.size() < 5) // TODO : reduire a 1 if
 		return (this->send_error("461", client, "Not enough parameters"), 0);
 	if (mess[4][0] != ':')
 		return (this->send_error("461", client, "Not enough parameters"), 0);
@@ -291,15 +297,19 @@ int Server::checkUser(Client& client, std::vector<std::string>& mess)
 	return 0;
 }
 
-int Server::checkQuit(Client& client, std::vector<std::string>& mess){
+int Server::checkQuit(Client& client, std::vector<std::string>& mess)
+{
 	std::string message;
 	if (mess.size() == 1)
 		message = "Client Quit";
-	else{
+	else
+	{
 		if (mess[1][0] != ':')
 			message = mess[1];
-		else{
-			for (int i = 1; i < (int)mess.size(); i++){
+		else
+		{
+			for (int i = 1; i < (int)mess.size(); i++)
+			{
 				message += mess[i];
 			}
 		}
@@ -309,4 +319,3 @@ int Server::checkQuit(Client& client, std::vector<std::string>& mess){
 	this->send_mess("", mess[0], message, client);
 	return (1);
 }
-

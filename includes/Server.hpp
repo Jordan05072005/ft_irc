@@ -5,7 +5,6 @@
 
 
 class Client;
-class Server;
 
 
 typedef struct cmd
@@ -16,10 +15,12 @@ typedef struct cmd
 }				t_cmd;
 
 
-class Server // TODO : forme canonique
+class Server
 {
 	private :
-		Server(void);
+		Server(void); // canocical
+		Server(Server const& copy); // canonical
+		Server&	operator=(Server const& other); // canonical
 		
 		int			_port_serv; // port donné au constructeur
 		std::string	_password; // mdp donné au constructeur
@@ -29,8 +30,7 @@ class Server // TODO : forme canonique
 		
 		sockaddr_in	_addr; // données à mettre dans le socket principal
 		std::vector<t_cmd> _cmd;
-		// std::vector<Channel> channel;
-
+		
 		void	initServ(void);
 		void	bindAndListen(sockaddr_in const& addr);
 		void	run(void);
@@ -44,8 +44,10 @@ class Server // TODO : forme canonique
 		int		checkNick(Client& client, std::vector<std::string>& mess);
 		int		checkUser(Client& client, std::vector<std::string>& mess);
 		int		checkQuit(Client& client, std::vector<std::string>& mess);
-	public:
-		Server(int port, std::string const& password);
+
+	public :
+		Server(int port, std::string const& password); // canonical
+		~Server(void) // canonical
 
 };
 

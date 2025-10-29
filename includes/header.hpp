@@ -18,6 +18,7 @@
 std::vector<std::string> split(const std::string &s, char delimiter);
 
 # include "Client.hpp"
+# include "Channel.hpp"
 # include "Server.hpp"
 
 #endif
