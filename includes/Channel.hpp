@@ -30,48 +30,50 @@ class Channel
 	public :
 		Channel(std::string const& name, Client const& creator);
 
-		// à voir d'autres constructeurs si possible et si besoin
-		Channel(std::string const& name, Client const& creator, std::string const& topic); // ? est ce qu'on en a besoin, est-ce que c'est possible
-		Channel(std::string const& name, Client const& creator, std::string const& channel_key); // ? est ce qu'on en a besoin, est-ce que c'est possible
+		// // à voir d'autres constructeurs si possible et si besoin
+		// Channel(std::string const& name, Client const& creator, std::string const& topic); // ? est ce qu'on en a besoin, est-ce que c'est possible
+		// Channel(std::string const& name, Client const& creator, std::string const& channel_key); // ? est ce qu'on en a besoin, est-ce que c'est possible
 
 		~Channel(void); // canonical
 
 
-		// des getteurs et setteurs au cas où
+		// // des getteurs et setteurs au cas où
 		std::string const&			getName(void) const;
-		void						setName(Client const& by, std::string const& name); //? besoin/possibilité de rename
+		// void						setName(Client const& by, std::string const& name); //? besoin/possibilité de rename
 
-		std::string const&			getTopic(void) const;
-		void						setTopic(Client const& by, std::string const& topic);
+		// std::string const&			getTopic(void) const;
+		// void						setTopic(Client const& by, std::string const& topic);
 		
-		std::string const&			getChannelKey(void) const;
-		void						setChannelKey(Client const& by, std::string const& channel_key);
+		// std::string const&			getChannelKey(void) const;
+		// void						setChannelKey(Client const& by, std::string const& channel_key);
 		
-		int const					getUserLimit(void) const;
-		void						setUserLimit(Client const& by, int nb);
+		// int const					getUserLimit(void) const;
+		// void						setUserLimit(Client const& by, int nb);
 		
-		bool const					getOptInviteOnly(void) const;
-		void						setOptInviteOnly(Client const& by, bool opt);
+		// bool const					getOptInviteOnly(void) const;
+		// void						setOptInviteOnly(Client const& by, bool opt);
 		
-		bool const					getOptRestrictTopic(void) const;
-		void						setOptRestrictTopic(Client const& by, bool opt);
+		// bool const					getOptRestrictTopic(void) const;
+		// void						setOptRestrictTopic(Client const& by, bool opt);
 		
-		bool const					getOptOperatorPrivilege(void) const;
-		void						setOptOperatorPrivilege(Client const& by, bool opt);
+		// bool const					getOptOperatorPrivilege(void) const;
+		// void						setOptOperatorPrivilege(Client const& by, bool opt);
 		
-		bool const					getOptInviteOnly(void) const;
-		void						setOptInviteOnly(Client const& by, bool opt);
+		// bool const					getOptInviteOnly(void) const;
+		// void						setOptInviteOnly(Client const& by, bool opt);
 		
-		bool const					getOptUserLimit(void) const;
-		void						setOptUserLimit(Client const& by, bool opt);
+		// bool const					getOptUserLimit(void) const;
+		// void						setOptUserLimit(Client const& by, bool opt);
 
 		std::vector<Client> const&	getUsers(void) const;
 		std::vector<Client> const&	getOperators(void) const;
 
 
 		void						addUsers(Client const& by, Client const& user);
-		void						addOperator(Client const& by, Client const& operator);
-
+		void						addOperator(Client const& by, Client const& operato);
+		int							checkUser(std::string& nick);
+		int							checkOperator(std::string& nick);
+		void						delUsers(std::string& nick);
 };
 
 #endif

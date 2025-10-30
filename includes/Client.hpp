@@ -7,8 +7,6 @@ class Client
 {
 	private :
 		Client(void); // canonical
-		Client(const Client& cpy); // canonical
-		Client& operator=(const Client& cpy); // canonical
 
 		//? enlever fd et len, inutiles ?, si oui rectifier Server::delClient()
 		int 		_fd; // client socket
@@ -20,11 +18,12 @@ class Client
 		std::string _ident;
 		std::string _realname;
 		std::string	_host;
-		//? remplacer par state
 		int			_etat; // etat = 1 -> login, etat = 2 -> register
 
 	public :
-		Client(int fd, sockaddr_in addr, socklen_t len); // canonical
+		Client(int fd, sockaddr_in addr, socklen_t len);
+		Client(const Client& cpy); // canonical
+		Client& operator=(const Client& cpy); // canonical
 		~Client(void); // canonical
 
 		int				getFd(void);
