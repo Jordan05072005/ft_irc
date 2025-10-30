@@ -35,6 +35,7 @@ static pollfd init_pollfd(int fd, short events, short revents)
 }
 
 Server::Server(void){}
+Server::~Server(void){}
 
 Server::Server(int port, std::string const& password) : _port_serv(port)
 {
@@ -46,11 +47,7 @@ Server::Server(int port, std::string const& password) : _port_serv(port)
 	this->_cmd.push_back(init_cmd("USER", &Server::checkUser, 1));
 	this->_cmd.push_back(init_cmd("QUIT", &Server::checkQuit, 1));
 	this->_cmd.push_back(init_cmd("KICK", &Server::checkKick, 2));
-	// this->_cmd.push_back(init_cmd("QUIT", &Server::checkQuit, 1));
-	// this->_cmd.push_back(init_cmd("QUIT", &Server::checkQuit, 1));
-	// this->_cmd.push_back(init_cmd("QUIT", &Server::checkQuit, 1));
-	// this->_cmd.push_back(init_cmd("QUIT", &Server::checkQuit, 1));
-	// this->_cmd.push_back(init_cmd("QUIT", &Server::checkQuit, 1));
+	this->_cmd.push_back(init_cmd("INVITE", &Server::checkInvite, 2));	
 
 	this->run();
 
@@ -102,9 +99,10 @@ void Server::run(void)
 
 	while (1)
 	{
-		err = poll(this->_fds.data(), this->_fds.size(), -1); // poll(pointeur sur tableau, taille tableau, timeout)
+		err = poll(this->_fds.data(), this->_fds.size(), POOL_TIME); // poll(pointeur sur tableau, taille tableau, timeout)
 		if (err < 0)
 			throw std::runtime_error("Error: poll");
+		this->delInvite();
 		// traitement server socket
 		if (this->_fds[0].revents & POLLIN) // & opération binaire, indique si le flag POLLIN est "activé", renvoie 0 ou POLLIN
 		{
@@ -169,23 +167,24 @@ int Server::errorEtat(int etat, std::string& cmd, Client &client)
 }
 //:ft_irc 451 JOIN :You have not registered
 
-void Server::sendMessLocal(std::string err, std::string cmd, Client& client, std::string body)
+void Server::sendMessLocal(std::string err, std::string cmd, Client& c, std::string body)
 {
 	std::string err_mess;
 	std::string nick;
 	std::stringstream ss;
 
-	nick = client.getNick();
+	nick = c.getNick();
 	if (nick.empty())
 		nick = "*";
-	if (cmd.size() != 0)
-		ss << ":irc " << err << " " << nick << " " << cmd << " :" << body << "\r\n";
+	if (err.empty())
+		ss << ":" << nick << "!" << (c.getIdent().empty() ? "*" : c.getIdent()) << "@" << c.getHost() << (cmd.empty() ? "" : (" " + cmd)) << " " << nick << " " << (body.empty() ? "" : (": " + body)) << "\r\n";
 	else
-		ss << ":irc " << err << " " << nick << " :" << body << "\r\n";
+		ss << ":irc " << err << " " << nick << (cmd.empty() ? "" : (" " + cmd)) << (body.empty() ? "" : (": " + body)) << "\r\n";
 	err_mess = ss.str();
-	send(client.getFd(), err_mess.c_str(), err_mess.size(), 0);
+	send(c.getFd(), err_mess.c_str(), err_mess.size(), 0);
 }
 
+//voir pr la ~
 void Server::sendMessGlobal(std::string channel, std::string cmd, std::string mess, Client& c)
 {
 	std::stringstream ss;
@@ -326,7 +325,7 @@ int Server::checkQuit(Client& client, std::vector<std::string>& mess)
 	return (1);
 }
 
-int	Server::checkChannel(std::string &name){
+int	Server::checkExistChannel(std::string &name){
 	for (size_t i = 0; i < this->_channel.size(); i++){
 		if (this->_channel[i].getName() == name)
 			return (1);
@@ -342,13 +341,21 @@ int	Server::getChannel(std::string &name){
 	return (0);
 }
 
+Client&	Server::getClient(std::string &nick){
+	for (size_t i = 0; i < this->_clients.size(); i++){
+		if (this->_clients[i].getNick() == nick)
+			return (this->_clients[i]);
+	}
+	return (this->_clients[0]); // trouver solution pr null
+}
+
 //KICK <channel> <user> [<comment>]
 int	Server::checkKick(Client& client, std::vector<std::string>& mess){
 	std::string message;
 
 	if (mess.size() < 4)
 		return (this->sendMessLocal("461", mess[0], client, "Not enough parameters"), 0);
-	if (!this->checkChannel(mess[1]))
+	if (!this->checkExistChannel(mess[1]))
 		return (this->sendMessLocal("403", mess[1], client, "No such channel"), 0);
 	if (!this->_channel[this->getChannel(mess[1])].checkUser(client.getNick()))
 		return (this->sendMessLocal("442", mess[1], client, "You're not on that channel"), 0);
@@ -370,3 +377,37 @@ int	Server::checkKick(Client& client, std::vector<std::string>& mess){
 // :<kicker_nick>!<user>@<host> KICK <channel> <target_nick> :<comment>
 // :Alice!~alice@127.0.0.1 KICK #42school johon :Trop de spam
 // :server 461 <nick> KICK :Not enough parameters
+
+int Server::checkExistClient(std::string& nick){
+	for (size_t i = 0; i < this->_clients.size(); i++){
+		if (this->_clients[i].getNick() == nick)
+			return 1;
+	}
+	return 0;
+}
+
+void Server::delInvite(){
+	for (size_t i = 0; i < this->_channel.size(); i++){
+		if (!this->_channel[i].getInvitee().empty())
+			this->_channel[i].delInvitee();
+	}
+}
+
+//INVITE <nickname> <channel>
+int Server::checkInvite(Client& client, std::vector<std::string>& mess){
+	if (mess.size() < 3)
+		return (this->sendMessLocal("461", mess[0], client, "Not enough parameters"), 0);
+	if (!this->checkExistClient(mess[1]))
+		return (this->sendMessLocal("401", mess[1], client, "No such nick/channel"), 0);
+	if (!this->checkExistChannel(mess[2]))
+		return (this->sendMessLocal("403", mess[2], client, "No such channel"), 0);
+	if (!this->_channel[this->getChannel(mess[2])].checkUser(client.getNick()))
+		return (this->sendMessLocal("442", mess[2], client, "You're not on that channel"), 0);
+	if (this->_channel[this->getChannel(mess[1])].getOptInviteOnly() 
+		&& !this->_channel[this->getChannel(mess[1])].checkOperator(client.getNick()))
+		return (this->sendMessLocal("482", mess[2], client, "You're not channel operator"), 0);
+	this->sendMessLocal("341", mess[1] + " #" + mess[2], client, "");
+	this->sendMessLocal("", mess[0], client, mess[2]);
+	this->_channel[this->getChannel(mess[1])].addInvitee(this->getClient(mess[1]));
+	return (0);
+}

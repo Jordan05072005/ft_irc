@@ -2,7 +2,7 @@
 # define  SERVER_HPP
 
 # include "header.hpp"
-
+# define POOL_TIME 1000
 
 class Client;
 class Server;
@@ -28,23 +28,28 @@ class Server
 		std::vector<t_cmd> _cmd;
 		std::vector<Channel> _channel;
 		
-		void	initServ(void);
-		void	bindAndListen(sockaddr_in const& addr);
-		void	run(void);
-		void	delClient(int index);
-		int		requestHandler(Client& client);
-		void	sendMessLocal(std::string err, std::string cmd, Client& client, std::string body);
-		void	sendMessGlobal(std::string channel, std::string cmd, std::string mess, Client& c);
-		int		errorEtat(int etat, std::string& cmd, Client &client);
-		int		uniqueNick(std::string &nick);
-		int		checkChannel(std::string &name);
-		int		getChannel(std::string &name);
-		int		checkPass(Client& client, std::vector<std::string>& mess);
-		int		checkNick(Client& client, std::vector<std::string>& mess);
-		int		checkUser(Client& client, std::vector<std::string>& mess);
-		int		checkCap(Client& client, std::vector<std::string>& mess);
-		int		checkQuit(Client& client, std::vector<std::string>& mess);
-		int		checkKick(Client& client, std::vector<std::string>& mess);
+		void		initServ(void);
+		void		bindAndListen(sockaddr_in const& addr);
+		void		run(void);
+		void		delClient(int index);
+		int			requestHandler(Client& client);
+		void		sendMessLocal(std::string err, std::string cmd, Client& client, std::string body);
+		void		sendMessGlobal(std::string channel, std::string cmd, std::string mess, Client& c);
+		int			errorEtat(int etat, std::string& cmd, Client &client);
+		int			uniqueNick(std::string &nick);
+		int			checkExistChannel(std::string &name);
+		int			checkExistClient(std::string &nick);
+		int			getChannel(std::string &name);
+		Client&	getClient(std::string &nick);
+		void		delInvite();
+		int			checkPass(Client& client, std::vector<std::string>& mess);
+		int			checkNick(Client& client, std::vector<std::string>& mess);
+		int			checkUser(Client& client, std::vector<std::string>& mess);
+		int			checkCap(Client& client, std::vector<std::string>& mess);
+		int			checkQuit(Client& client, std::vector<std::string>& mess);
+		int			checkKick(Client& client, std::vector<std::string>& mess);
+		int			checkInvite(Client& client, std::vector<std::string>& mess);
+
 
 	public :
 		Server(int port, std::string const& password); // canonical

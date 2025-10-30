@@ -5,6 +5,11 @@
 
 class Client;
 
+typedef struct s_invitee{
+	Client *client;
+	std::time_t time;
+}		t_invitee;
+
 class Channel
 {
 	private :
@@ -16,6 +21,7 @@ class Channel
 		std::string 		topic;
 		std::vector<Client>	users;
 		std::vector<Client>	operators;
+		std::vector<t_invitee>	_invitee;
 
 		// TODO : attribut/fonction pour Invite-only
 		std::string			channel_key;
@@ -50,7 +56,7 @@ class Channel
 		// int const					getUserLimit(void) const;
 		// void						setUserLimit(Client const& by, int nb);
 		
-		// bool const					getOptInviteOnly(void) const;
+		bool					getOptInviteOnly(void) const;
 		// void						setOptInviteOnly(Client const& by, bool opt);
 		
 		// bool const					getOptRestrictTopic(void) const;
@@ -65,14 +71,18 @@ class Channel
 		// bool const					getOptUserLimit(void) const;
 		// void						setOptUserLimit(Client const& by, bool opt);
 
-		std::vector<Client> const&	getUsers(void) const;
-		std::vector<Client> const&	getOperators(void) const;
+		const std::vector<Client>&	getUsers(void) const;
+		const std::vector<Client>&	getOperators(void) const;
 
 
 		void						addUsers(Client const& by, Client const& user);
 		void						addOperator(Client const& by, Client const& operato);
-		int							checkUser(std::string& nick);
-		int							checkOperator(std::string& nick);
+		const std::vector<t_invitee>&	getInvitee()const;
+		void						addInvitee(Client& client);
+		int							checkUser(const std::string& nick);
+		int							checkOperator(const std::string& nick);
+		int							checkInvitee(const std::string& nick);
+		void						delInvitee();
 		void						delUsers(std::string& nick);
 };
 

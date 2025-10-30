@@ -37,23 +37,13 @@ Channel::Channel(std::string const& name, Client const& creator)
 	return ;
 }
 
-int Channel::checkUser(std::string& nick){
+int Channel::checkUser(const std::string& nick){
 	for (size_t i = 0; i < this->users.size(); i++){
 		if (this->users[i].getNick() == nick)
 			return (1);
 	}
 	return (0);
 }
-
-int Channel::checkOperator(std::string& nick){
-	for (size_t i = 0; i < this->operators.size(); i++){
-		if (this->users[i].getNick() == nick)
-			return (1);
-	}
-	return (0);
-}
-
-#include <algorithm> // pour std::remove_if
 
 void	Channel::delUsers(std::string& nick){
 	for (size_t i =0; i < this->users.size(); i++){
@@ -62,7 +52,51 @@ void	Channel::delUsers(std::string& nick){
 	}
 }
 
+int Channel::checkOperator(const std::string& nick){
+	for (size_t i = 0; i < this->operators.size(); i++){
+		if (this->users[i].getNick() == nick)
+			return (1);
+	}
+	return (0);
+}
+
+const std::vector<t_invitee>&	Channel::getInvitee()const{
+	return (this->_invitee);
+}
+
+
+void Channel::addInvitee(Client& client){
+	t_invitee invitee;
+
+	invitee.client = &client;
+	invitee.time = std::time(NULL);
+	if (this->checkInvitee(client.getNick()))
+		return ;
+	this->_invitee.push_back(invitee);
+}
+
+int Channel::checkInvitee(const std::string& nick){
+	for (size_t i = 0; i < this->_invitee.size(); i++){
+		if (this->_invitee[i].client->getNick() == nick)
+			return (1);
+	}
+	return (0);
+}
+
+void	Channel::delInvitee(){
+	std::time_t now = std::time(NULL);
+	for (size_t i = 0; i < this->_invitee.size(); i++){
+		if (now - this->_invitee[i].time >= 600)
+			this->_invitee.erase(this->_invitee.begin() + i);
+	}
+}
+
 std::string const&	Channel::getName(void) const{
 	return (this->name);
 }
+
+bool Channel::getOptInviteOnly(void) const{
+	return (this->i);
+}
+
 

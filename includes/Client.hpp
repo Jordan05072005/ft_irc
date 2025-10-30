@@ -26,19 +26,19 @@ class Client
 		Client& operator=(const Client& cpy); // canonical
 		~Client(void); // canonical
 
-		int				getFd(void);
+		int				getFd(void)const;
 		void			setFd(int fd);
-		std::string&	getBuf(void);
+		const std::string&	getBuf(void)const;
 		void 			setBuf(char *buf, int oct);
-		std::string& 	getNick(void);
+		const std::string& 	getNick(void)const;
 		void 			setNick(std::string& nick);
-		int 			getEtat(void);
+		int 			getEtat(void)const;
 		void 			setEtat(int e);
-		std::string&	getIdent(void);
+		const std::string&	getIdent(void)const;
 		void 			setIdent(std::string& indent);
-		std::string&	getRealName(void);
+		const std::string&	getRealName(void)const;
 		void 			setRealName(std::string& name);
-		std::string&	getHost(void);
+		const std::string&	getHost(void)const;
 		void 			setHost(std::string& host);
 };
 
