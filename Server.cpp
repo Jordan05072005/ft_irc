@@ -411,3 +411,7 @@ int Server::checkInvite(Client& client, std::vector<std::string>& mess){
 	this->_channel[this->getChannel(mess[1])].addInvitee(this->getClient(mess[1]));
 	return (0);
 }
+
+int Server::checkTopic(Client& client, std::vector<std::string>& mess){
+	
+}
