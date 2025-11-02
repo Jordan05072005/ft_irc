@@ -24,7 +24,6 @@ Channel::Channel(std::string const& name, Client const& creator)
 	this->operators.push_back(creator);
 	this->users.push_back(creator);
 
-	this->topic = "";
 	this->channel_key = "";
 	this->user_limit = 0; // no limit
 
@@ -98,5 +97,21 @@ std::string const&	Channel::getName(void) const{
 bool Channel::getOptInviteOnly(void) const{
 	return (this->i);
 }
+
+bool Channel::getOptRestrictTopic(void) const{
+	return (this->t);
+}
+
+const t_topic& Channel::getTopic(void) const{
+	return (this->topic);
+}
+
+void 	Channel::setTopic(const std::string & topic, const std::string &nick){
+	std::time_t now = std::time(NULL);
+	this->topic.topic = topic;
+	this->topic.time = now;
+	this->topic.modifBy = nick;
+}
+
 
 

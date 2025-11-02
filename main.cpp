@@ -52,7 +52,8 @@ int main(int ac, char **av)
 
 	try
 	{
-		Server serv(std::atoi(av[1]), password);
+		Server::getInstance().init(std::atoi(av[1]), password);
+		Server& serv = Server::getInstance();
 	}
 	catch (std::exception& e)
 	{

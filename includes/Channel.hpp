@@ -10,15 +10,18 @@ typedef struct s_invitee{
 	std::time_t time;
 }		t_invitee;
 
+typedef struct s_topic{
+	std::string topic;
+	std::string modifBy;
+	std::time_t time;
+}		t_topic;
+
 class Channel
 {
 	private :
-		Channel(void); // canonical
-		Channel(Channel const& copy); // canonical
-		Channel&	operator=(Channel const& other); // canonical
 
 		std::string 		name;
-		std::string 		topic;
+		t_topic		topic;
 		std::vector<Client>	users;
 		std::vector<Client>	operators;
 		std::vector<t_invitee>	_invitee;
@@ -34,8 +37,10 @@ class Channel
 		bool				l; // Set/Remove the user limit to channel
 
 	public :
+		Channel(void); // canonical
 		Channel(std::string const& name, Client const& creator);
-
+		Channel(Channel const& copy); // canonical
+		Channel&	operator=(Channel const& other); // canonical
 		// // à voir d'autres constructeurs si possible et si besoin
 		// Channel(std::string const& name, Client const& creator, std::string const& topic); // ? est ce qu'on en a besoin, est-ce que c'est possible
 		// Channel(std::string const& name, Client const& creator, std::string const& channel_key); // ? est ce qu'on en a besoin, est-ce que c'est possible
@@ -47,8 +52,8 @@ class Channel
 		std::string const&			getName(void) const;
 		// void						setName(Client const& by, std::string const& name); //? besoin/possibilité de rename
 
-		// std::string const&			getTopic(void) const;
-		// void						setTopic(Client const& by, std::string const& topic);
+		const t_topic&	getTopic(void) const;
+		void						setTopic(const std::string & topic, const std::string &nick);
 		
 		// std::string const&			getChannelKey(void) const;
 		// void						setChannelKey(Client const& by, std::string const& channel_key);
@@ -59,14 +64,12 @@ class Channel
 		bool					getOptInviteOnly(void) const;
 		// void						setOptInviteOnly(Client const& by, bool opt);
 		
-		// bool const					getOptRestrictTopic(void) const;
+		bool					getOptRestrictTopic(void) const;
 		// void						setOptRestrictTopic(Client const& by, bool opt);
 		
 		// bool const					getOptOperatorPrivilege(void) const;
 		// void						setOptOperatorPrivilege(Client const& by, bool opt);
-		
-		// bool const					getOptInviteOnly(void) const;
-		// void						setOptInviteOnly(Client const& by, bool opt);
+
 		
 		// bool const					getOptUserLimit(void) const;
 		// void						setOptUserLimit(Client const& by, bool opt);

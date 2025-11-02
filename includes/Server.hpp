@@ -20,6 +20,7 @@ class Server
 		Server(void); // canocical
 		Server(Server const& copy); // canonical
 		Server&	operator=(Server const& other); // canonical
+		bool		_init;
 		int			_port_serv; // port donné au constructeur
 		std::string	_password; // mdp donné au constructeur
 		std::vector<pollfd> _fds; // tableau de structre, contient sockets et évènement à surveiller
@@ -27,7 +28,7 @@ class Server
 		sockaddr_in	_addr; // données à mettre dans le socket principal
 		std::vector<t_cmd> _cmd;
 		std::vector<Channel> _channel;
-		
+
 		void		initServ(void);
 		void		bindAndListen(sockaddr_in const& addr);
 		void		run(void);
@@ -49,12 +50,13 @@ class Server
 		int			checkQuit(Client& client, std::vector<std::string>& mess);
 		int			checkKick(Client& client, std::vector<std::string>& mess);
 		int			checkInvite(Client& client, std::vector<std::string>& mess);
-
+		int			checkTopic(Client& client, std::vector<std::string>& mess);
 
 	public :
-		Server(int port, std::string const& password); // canonical
+		void init(int port, std::string const& password);
+		static Server& getInstance();
+		void		closeAll();
 		~Server(void); // canonical
-
 };
 
 #endif
