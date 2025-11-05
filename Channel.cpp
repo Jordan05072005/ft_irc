@@ -29,7 +29,7 @@ Channel& Channel::operator=(Channel const& other)
 	return (*this);
 }
 
-Channel::Channel(std::string const& _name, Client const& creator)
+Channel::Channel(std::string & _name, Client & creator)
 {
 	this->_name = _name;
 	this->_topic.topic = "";
@@ -99,12 +99,12 @@ bool	Channel::getOptChannelKey(void) const
 /*-----------------------------------------------------------------------------------------------*/
 
 
-std::vector<Client*> const&		Channel::getUsers(void) const
+std::vector<Client> const&		Channel::getUsers(void) const
 {
 	return (this->_users);
 }
 
-std::vector<Client*> const&		Channel::getOperators(void) const
+std::vector<Client> const&		Channel::getOperators(void) const
 {
 	return (this->_operators);
 }
@@ -120,13 +120,13 @@ const std::vector<t_invite>&	Channel::getInvite(void) const
 
 void	Channel::addUser(Client const& user)
 {
-	this->_users.push_back(&user);
+	this->_users.push_back(user);
 	return ;
 }
 
 void	Channel::addOperator(Client const& user)
 {
-	this->_users.push_back(&user);
+	this->_users.push_back(user);
 	return ;
 }
 
@@ -205,12 +205,14 @@ int Channel::checkInvite(const std::string& nick)
 std::string	Channel::createStringUsers(void) const
 {
 	std::string str;
+	std::string nick;
 
-	for (int i = 0; i < this->_users.size(); ++i)
+	for (size_t i = 0; i < this->_users.size(); ++i)
 	{
 		if (i > 0)
 			str += " ";
-		str += this->_users[i]->getNick();
+		nick = this->_users[i].getNick();
+		str += nick;
 	}
 	return (str);
 }

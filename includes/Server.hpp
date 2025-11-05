@@ -21,8 +21,6 @@ class Server
 		// Server(Server const& copy); // canonical
 		// Server&	operator=(Server const& other); // canonical
 		
-		void					closeAll();
-
 		bool					_init;
 		int						_port_serv; // port donné au constructeur
 		std::string				_password; // mdp donné au constructeur
@@ -58,6 +56,8 @@ class Server
 		void	sendMessGlobal(std::string channel, std::string cmd, std::string mess, Client& c);
 	
 		int		getIndexChannel(std::string &name);
+		int		newChannel(std::string &channel, Client& client);
+		int		addClientChannel(std::string &channel, Client& client);
 		Client&	getClient(std::string &nick);
 		
 		void	delClient(int index);
@@ -67,7 +67,8 @@ class Server
 		//Server(int port, std::string const& password); // canonical
 		void 			init(int port, std::string const& password);
 		static Server&	getInstance(void);
-		~Server(void) // canonical
+		~Server(void); // canonical
+		void					closeAll();
 
 };
 

@@ -23,14 +23,10 @@ typedef struct s_topic
 class Channel
 {
 	private :
-		Channel(void); // canonical
-		Channel(Channel const& copy); // canonical
-		Channel&	operator=(Channel const& other); // canonical
-
 		std::string 			_name;
 		t_topic		 			_topic;
-		std::vector<Client*>	_users;
-		std::vector<Client*>	_operators;
+		std::vector<Client>	_users;
+		std::vector<Client>	_operators;
 		std::vector<t_invite>	_invite;
 
 		// TODO : attribut/fonction pour Invite-only
@@ -44,7 +40,10 @@ class Channel
 		bool					_l; // Set/Remove the user limit to channel
 
 	public :
-		Channel(std::string const& name, Client const& creator);
+		Channel(void);
+		Channel(std::string& name, Client& creator);
+		Channel(Channel const& copy); // canonical
+		Channel&	operator=(Channel const& other); // canonical
 
 		// à voir d'autres constructeurs si possible et si besoin
 		//Channel(std::string const& name, Client const& creator, std::string const& topic); // ? est ce qu'on en a besoin, est-ce que c'est possible
@@ -65,13 +64,13 @@ class Channel
 		//int const						getUserLimit(void) const;
 		//void							setUserLimit(Client const& by, int nb);
 		
-		bool const						getOptInviteOnly(void) const;
+		bool						getOptInviteOnly(void) const;
 		//void							setOptInviteOnly(Client const& by, bool opt);
 		
-		bool const						getOptRestrictTopic(void) const;
+		bool						getOptRestrictTopic(void) const;
 		//void							setOptRestrictTopic(Client const& by, bool opt);
 		
-		bool const						getOptChannelKey(void) const;
+		bool						getOptChannelKey(void) const;
 		//void							setOptChannelKey(Client const& by, bool opt);
 
 		//bool const					getOptOperatorPrivilege(void) const;
@@ -80,14 +79,14 @@ class Channel
 		//bool const					getOptUserLimit(void) const;
 		//void							setOptUserLimit(Client const& by, bool opt);
 
-		std::vector<Client*> const&		getUsers(void) const;
-		std::vector<Client*> const&		getOperators(void) const;
+		const std::vector<Client>&		getUsers(void) const;
+		const std::vector<Client>&		getOperators(void) const;
 		const std::vector<t_invite>&	getInvite(void) const;
 
 
 		void							addUser(Client const& user);
 		// TODO : voir si possibilité de rajouter operateur autrement que dans la creation
-		void							addOperator(Client const& operator);
+		void							addOperator(Client const& user);
 		void							addInvite(Client& client);
 
 		void							removeUser(std::string& nick);
