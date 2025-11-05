@@ -3,14 +3,14 @@
 
 Client::Client(void){}
 
-Client::Client(int fd, sockaddr_in addr, socklen_t len) : _fd(fd), _addr(addr), _len(len), _etat(0)
+Client::Client(int fd, sockaddr_in addr, socklen_t len) : _fd(fd), _addr(addr), _len(len), _state(0)
 {
 	char ip_str[INET_ADDRSTRLEN];
 	inet_ntop(AF_INET, &(addr.sin_addr), ip_str, INET_ADDRSTRLEN);
 	this->_host = ip_str;
 }
 
-Client::Client(const Client& cpy) : _etat(0)
+Client::Client(const Client& cpy) : _state(0)
 {
 	*this = cpy;
 }
@@ -31,7 +31,11 @@ Client& Client::operator=(const Client& cpy)
 
 Client::~Client(void){}
 
-int Client::getFd(void)const
+
+/*-----------------------------------------------------------------------------------------------*/
+
+
+int Client::getFd(void) const
 {
 	return (this->_fd);
 }
@@ -41,7 +45,11 @@ void Client::setFd(int fd)
 	this->_fd = fd;
 }
 
-const std::string& Client::getBuf(void)const
+
+/*-----------------------------------------------------------------------------------------------*/
+
+
+std::string const& Client::getBuf(void) const
 {
 	return (this->_buff);
 }
@@ -52,7 +60,11 @@ void Client::setBuf(char *buf, int oct)
 		this->_buff.assign(buf, oct); 
 }
 
-const std::string& Client::getNick(void)const
+
+/*-----------------------------------------------------------------------------------------------*/
+
+
+std::string const& Client::getNick(void) const
 {
 	return (this->_nick);
 }
@@ -62,17 +74,7 @@ void Client::setNick(std::string& nick)
 	this->_nick = nick; 
 }
 
-int Client::getEtat(void)const
-{
-	return (this->_etat);
-}
-
-void Client::setEtat(int e)
-{
-	this->_etat = e;
-}
-
-const std::string& Client::getIdent(void)const
+std::string const& Client::getIdent(void) const
 {
 	return (this->_ident);
 }
@@ -83,7 +85,7 @@ void Client::setIdent(std::string& ident)
 }
 
 
-const std::string& Client::getRealName(void)const
+std::string const& Client::getRealName(void) const
 {
 	return (this->_realname);
 }
@@ -94,7 +96,7 @@ void Client::setRealName(std::string& name)
 }
 
 
-const std::string& Client::getHost(void)const
+std::string const& Client::getHost(void) const
 {
 	return (this->_host);
 }
@@ -105,3 +107,36 @@ void Client::setHost(std::string& host)
 }
 
 //nick!~ident@host
+
+/*-----------------------------------------------------------------------------------------------*/
+
+
+void	Client::addChannel(Channel* name)
+{
+	this->_channel.push_back(Channel);
+	return ;
+}
+
+void	Client::removeAllChannels(void)
+{
+	for (int i = 0; i < this->_channel.size(); ++i)
+	{
+		this->_channel[i]->removeUser(this->_nick);
+		// TODO : add message de sortie de channel
+	}
+	return ;
+}
+
+
+/*-----------------------------------------------------------------------------------------------*/
+
+
+int Client::getState(void) const
+{
+	return (this->_state);
+}
+
+void Client::setState(int e)
+{
+	this->_state = e;
+}

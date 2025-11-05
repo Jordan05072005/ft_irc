@@ -10,108 +10,207 @@ Channel::Channel(Channel const& copy)
 
 Channel& Channel::operator=(Channel const& other)
 {
-	if (this != &other){
-		this->i = other.i;//faire une cpy profonde avec les getteur
+	if (this != &other)
+	{
+		this->_name = other._name;
+		this->_topic = other._topic;
+		this->_users = other._users;
+		this->_operators = other._operators;
+		this->_invite = other._invite;
+		this->_channel_key = other._channel_key;
+		this->_user_limit = other._user_limit;
+
+		this->_i = other._i;
+		this->_t = other._t;
+		this->_k = other._k;
+		this->_o = other._o;
+		this->_l = other._l;
 	}
-	return *this;
+	return (*this);
+}
+
+Channel::Channel(std::string const& _name, Client const& creator)
+{
+	this->_name = _name;
+	this->_topic.topic = "";
+	this->_topic.modifBy = "";
+	this->_topic.time = 0;
+	this->_users.push_back(creator);
+	this->_operators.push_back(creator);
+
+	this->_channel_key = "";
+	this->_user_limit = 0; // no limit
+
+	// TODO : voir les options par défaut et les différentes possibilités de création de channel en 1 ligne de commande
+	this->_i = false;
+	this->_t = false;
+	this->_k = false;
+	this->_o = false;
+	this->_l = false;
+	return ;
 }
 
 Channel::~Channel(void){}
 
-Channel::Channel(std::string const& name, Client const& creator)
+
+/*-----------------------------------------------------------------------------------------------*/
+
+
+std::string const&	Channel::getName(void) const
 {
-	this->name = name;
-	this->operators.push_back(creator);
-	this->users.push_back(creator);
+	return (this->_name);
+}
 
-	this->channel_key = "";
-	this->user_limit = 0; // no limit
+const t_topic& Channel::getTopic(void) const
+{
+	return (this->_topic);
+}
 
-	// TODO : voir les options par défaut et les différentes possibilités de création de channel en 1 ligne de commande
-	this->i = false;
-	this->t = false;
-	this->k = false;
-	this->o = false;
-	this->l = false;
+void 	Channel::setTopic(const std::string& topic, const std::string &nick)
+{
+	std::time_t now = std::time(NULL);
+	
+	this->_topic.topic = topic;
+	this->_topic.time = now;
+	this->_topic.modifBy = nick;
+}
+
+std::string const&	Channel::getChannelKey(void) const
+{
+	return (this->_channel_key);
+}
+
+bool Channel::getOptInviteOnly(void) const
+{
+	return (this->_i);
+}
+
+bool Channel::getOptRestrictTopic(void) const
+{
+	return (this->_t);
+}
+
+bool	Channel::getOptChannelKey(void) const
+{
+	return (this->_k);
+}
+
+
+/*-----------------------------------------------------------------------------------------------*/
+
+
+std::vector<Client*> const&		Channel::getUsers(void) const
+{
+	return (this->_users);
+}
+
+std::vector<Client*> const&		Channel::getOperators(void) const
+{
+	return (this->_operators);
+}
+
+const std::vector<t_invite>&	Channel::getInvite(void) const
+{
+	return (this->_invite);
+}
+
+
+/*-----------------------------------------------------------------------------------------------*/
+
+
+void	Channel::addUser(Client const& user)
+{
+	this->_users.push_back(&user);
 	return ;
 }
 
-int Channel::checkUser(const std::string& nick){
-	for (size_t i = 0; i < this->users.size(); i++){
-		if (this->users[i].getNick() == nick)
-			return (1);
-	}
-	return (0);
+void	Channel::addOperator(Client const& user)
+{
+	this->_users.push_back(&user);
+	return ;
 }
 
-void	Channel::delUsers(std::string& nick){
-	for (size_t i =0; i < this->users.size(); i++){
-		if (this->users[i].getNick() == nick)
-		 users.erase(users.begin() + i);
-	}
-}
+void Channel::addInvite(Client& client)
+{
+	t_invite invite;
 
-int Channel::checkOperator(const std::string& nick){
-	for (size_t i = 0; i < this->operators.size(); i++){
-		if (this->users[i].getNick() == nick)
-			return (1);
-	}
-	return (0);
-}
-
-const std::vector<t_invitee>&	Channel::getInvitee()const{
-	return (this->_invitee);
-}
-
-
-void Channel::addInvitee(Client& client){
-	t_invitee invitee;
-
-	invitee.client = &client;
-	invitee.time = std::time(NULL);
-	if (this->checkInvitee(client.getNick()))
+	invite.client = &client;
+	invite.time = std::time(NULL);
+	if (this->checkInvite(client.getNick()))
 		return ;
-	this->_invitee.push_back(invitee);
+	this->_invite.push_back(invite);
 }
 
-int Channel::checkInvitee(const std::string& nick){
-	for (size_t i = 0; i < this->_invitee.size(); i++){
-		if (this->_invitee[i].client->getNick() == nick)
+
+/*-----------------------------------------------------------------------------------------------*/
+
+
+void	Channel::removeUser(std::string& nick)
+{
+	for (size_t i = 0; i < this->_users.size(); i++)
+	{
+		if (this->_users[i].getNick() == nick)
+			this->_users.erase(this->_users.begin() + i);
+	}
+}
+
+void	Channel::removeInvite(void)
+{
+	std::time_t now = std::time(NULL);
+	for (size_t i = 0; i < this->_invite.size(); i++)
+	{
+		if (now - this->_invite[i].time >= 600)
+			this->_invite.erase(this->_invite.begin() + i);
+	}
+}
+
+
+/*-----------------------------------------------------------------------------------------------*/
+
+
+int Channel::checkUser(const std::string& nick)
+{
+	for (size_t i = 0; i < this->_users.size(); i++)
+	{
+		if (this->_users[i].getNick() == nick)
 			return (1);
 	}
 	return (0);
 }
 
-void	Channel::delInvitee(){
-	std::time_t now = std::time(NULL);
-	for (size_t i = 0; i < this->_invitee.size(); i++){
-		if (now - this->_invitee[i].time >= 600)
-			this->_invitee.erase(this->_invitee.begin() + i);
+int Channel::checkOperator(const std::string& nick)
+{
+	for (size_t i = 0; i < this->_operators.size(); i++)
+	{
+		if (this->_users[i].getNick() == nick)
+			return (1);
 	}
+	return (0);
 }
 
-std::string const&	Channel::getName(void) const{
-	return (this->name);
-}
-
-bool Channel::getOptInviteOnly(void) const{
-	return (this->i);
-}
-
-bool Channel::getOptRestrictTopic(void) const{
-	return (this->t);
-}
-
-const t_topic& Channel::getTopic(void) const{
-	return (this->topic);
-}
-
-void 	Channel::setTopic(const std::string & topic, const std::string &nick){
-	std::time_t now = std::time(NULL);
-	this->topic.topic = topic;
-	this->topic.time = now;
-	this->topic.modifBy = nick;
+int Channel::checkInvite(const std::string& nick)
+{
+	for (size_t i = 0; i < this->_invite.size(); i++)
+	{
+		if (this->_invite[i].client->getNick() == nick)
+			return (1);
+	}
+	return (0);
 }
 
 
+/*-----------------------------------------------------------------------------------------------*/
 
+
+std::string	Channel::createStringUsers(void) const
+{
+	std::string str;
+
+	for (int i = 0; i < this->_users.size(); ++i)
+	{
+		if (i > 0)
+			str += " ";
+		str += this->_users[i]->getNick();
+	}
+	return (str);
+}

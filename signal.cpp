@@ -1,15 +1,18 @@
 #include "includes/header.hpp"
 
-void handle_signal(int sig) {
+void handle_signal(int sig)
+{
 	Server& serv = Server::getInstance();
-	if (sig == SIGINT || sig == SIGTERM){
+	if (sig == SIGINT || sig == SIGTERM)
+	{
 			serv.closeAll();
 			std::cout << "bye" << std::endl;
 			exit(0);
 	}
 }
 
-void setup_signals() {
+void setup_signals(void)
+{
 	struct sigaction sa;
 	sa.sa_handler = handle_signal;
 	sigemptyset(&sa.sa_mask);

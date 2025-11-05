@@ -14,12 +14,10 @@
 # include <string>
 # include <sstream>
 # include <ctime>
-#include <signal.h>
-#include <stdlib.h>
+# include <signal.h>
 
-
-std::vector<std::string> split(const std::string &s, char delimiter);
-void setup_signals();
+std::vector<std::string>	split(const std::string &s, char delimiter);
+void						setup_signals(void);
 
 # include "Client.hpp"
 # include "Channel.hpp"
