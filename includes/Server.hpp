@@ -26,12 +26,21 @@ class Server
 		std::string				_password; // mdp donné au constructeur
 		
 		std::vector<pollfd> 	_fds; // tableau de structre, contient sockets et évènement à surveiller
-		std::vector<Client> 	_clients; // tableau de classe, gestionnaire des données client
+		std::vector<Client*> 	_clients; // tableau de classe, gestionnaire des données client
 		
 		sockaddr_in				_addr; // données à mettre dans le socket principal
 		std::vector<t_cmd>		_cmd;
-		std::vector<Channel>	_channel;
-		
+		std::vector<Channel*>	_channel;
+		/*
+			!!!!!!!!
+
+			!std::vector<Channel* / Client*> au lieu de std::vector<Channel / Client> car adresses changent à chaque push_back
+			!donc création des Channels / Clients avec new
+
+			!penser a new et delete les channels/clients du tableau suivant les mouvements des clients
+
+			!!!!!!!!
+		*/
 		void	initServ(void);
 		void	bindAndListen(sockaddr_in const& addr);
 		void	run(void);
@@ -46,20 +55,19 @@ class Server
 		int		checkInvite(Client& client, std::vector<std::string>& mess);
 		int		checkTopic(Client& client, std::vector<std::string>& mess);
 		int		checkJoin(Client& client, std::vector<std::string>& mess);
+		int		checkMode(Client& client, std::vector<std::string>& mess);
 
-		int		checkUniqueNick(std::string &nick);
-		int		checkExistChannel(std::string &name);
-		int		checkExistClient(std::string &nick);
+		int		checkUniqueNick(std::string& nick);
+		int		checkExistClient(std::string& nick);
+		int		checkExistChannel(std::string& name);
 
-		int		errorState(int state, std::string& cmd, Client &client);
+		int		errorState(int state, std::string& cmd, Client& client);
 		void	sendMessLocal(std::string err, std::string cmd, Client& client, std::string body);
 		void	sendMessGlobal(std::string channel, std::string cmd, std::string mess, Client& c);
 	
-		int		getIndexChannel(std::string &name);
-		int		newChannel(std::string &channel, Client& client);
-		int		addClientChannel(std::string &channel, Client& client);
-		Client&	getClient(std::string &nick);
-		
+		int		getIndexChannel(std::string& name);
+		Client&	getClient(std::string& nick);
+
 		void	delClient(int index);
 		void	delInvite(void);
 		
@@ -67,8 +75,8 @@ class Server
 		//Server(int port, std::string const& password); // canonical
 		void 			init(int port, std::string const& password);
 		static Server&	getInstance(void);
-		~Server(void); // canonical
-		void					closeAll();
+		void			closeAll();
+		~Server(void) // canonical
 
 };
 

@@ -9,6 +9,7 @@ void handle_signal(int sig)
 			std::cout << "bye" << std::endl;
 			exit(0);
 	}
+	return ;
 }
 
 void setup_signals(void)
@@ -21,4 +22,5 @@ void setup_signals(void)
 	sigaction(SIGINT, &sa, NULL);
 	sigaction(SIGTERM, &sa, NULL);
 	signal(SIGPIPE, SIG_IGN);
+	return ;
 }

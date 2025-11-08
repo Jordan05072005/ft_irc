@@ -23,14 +23,14 @@ Channel& Channel::operator=(Channel const& other)
 		this->_i = other._i;
 		this->_t = other._t;
 		this->_k = other._k;
-		this->_o = other._o;
 		this->_l = other._l;
 	}
 	return (*this);
 }
 
-Channel::Channel(std::string & _name, Client & creator)
+Channel::Channel(std::string const& _name, Client* creator)
 {
+	this->_creationtime = std::time(nullptr);
 	this->_name = _name;
 	this->_topic.topic = "";
 	this->_topic.modifBy = "";
@@ -41,11 +41,28 @@ Channel::Channel(std::string & _name, Client & creator)
 	this->_channel_key = "";
 	this->_user_limit = 0; // no limit
 
-	// TODO : voir les options par défaut et les différentes possibilités de création de channel en 1 ligne de commande
 	this->_i = false;
 	this->_t = false;
 	this->_k = false;
-	this->_o = false;
+	this->_l = false;
+	return ;
+}
+
+Channel::Channel(std::string const& _name, std::string const& key, Client* creator)
+{
+	this->_name = _name;
+	this->_topic.topic = "";
+	this->_topic.modifBy = "";
+	this->_topic.time = 0;
+	this->_users.push_back(creator);
+	this->_operators.push_back(creator);
+
+	this->_channel_key = key;
+	this->_user_limit = 0; // no limit
+
+	this->_i = false;
+	this->_t = false;
+	this->_k = true;
 	this->_l = false;
 	return ;
 }
@@ -99,12 +116,12 @@ bool	Channel::getOptChannelKey(void) const
 /*-----------------------------------------------------------------------------------------------*/
 
 
-std::vector<Client> const&		Channel::getUsers(void) const
+std::vector<Client*> const&		Channel::getUsers(void) const
 {
 	return (this->_users);
 }
 
-std::vector<Client> const&		Channel::getOperators(void) const
+std::vector<Client*> const&		Channel::getOperators(void) const
 {
 	return (this->_operators);
 }
@@ -118,25 +135,25 @@ const std::vector<t_invite>&	Channel::getInvite(void) const
 /*-----------------------------------------------------------------------------------------------*/
 
 
-void	Channel::addUser(Client const& user)
+void	Channel::addUser(Client* user)
 {
 	this->_users.push_back(user);
 	return ;
 }
 
-void	Channel::addOperator(Client const& user)
+void	Channel::addOperator(Client* user)
 {
 	this->_users.push_back(user);
 	return ;
 }
 
-void Channel::addInvite(Client& client)
+void Channel::addInvite(Client* client)
 {
 	t_invite invite;
 
-	invite.client = &client;
+	invite.client = client;
 	invite.time = std::time(NULL);
-	if (this->checkInvite(client.getNick()))
+	if (this->checkInvite(client->getNick()))
 		return ;
 	this->_invite.push_back(invite);
 }
@@ -149,7 +166,7 @@ void	Channel::removeUser(std::string& nick)
 {
 	for (size_t i = 0; i < this->_users.size(); i++)
 	{
-		if (this->_users[i].getNick() == nick)
+		if (this->_users[i]->getNick() == nick)
 			this->_users.erase(this->_users.begin() + i);
 	}
 }
@@ -172,7 +189,7 @@ int Channel::checkUser(const std::string& nick)
 {
 	for (size_t i = 0; i < this->_users.size(); i++)
 	{
-		if (this->_users[i].getNick() == nick)
+		if (this->_users[i]->getNick() == nick)
 			return (1);
 	}
 	return (0);
@@ -182,7 +199,7 @@ int Channel::checkOperator(const std::string& nick)
 {
 	for (size_t i = 0; i < this->_operators.size(); i++)
 	{
-		if (this->_users[i].getNick() == nick)
+		if (this->_users[i]->getNick() == nick)
 			return (1);
 	}
 	return (0);
@@ -205,14 +222,14 @@ int Channel::checkInvite(const std::string& nick)
 std::string	Channel::createStringUsers(void) const
 {
 	std::string str;
-	std::string nick;
 
-	for (size_t i = 0; i < this->_users.size(); ++i)
+	for (int i = 0; i < this->_users.size(); ++i)
 	{
 		if (i > 0)
 			str += " ";
-		nick = this->_users[i].getNick();
-		str += nick;
+		if (this->checkOperator(this->_users[i]->getNick()))
+			str += "@";
+		str += this->_users[i]->getNick();
 	}
 	return (str);
 }

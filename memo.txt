@@ -33,7 +33,3 @@ pool:
 
 		-Si le client a fermé → POLLHUP
 	et donc on met dans event se que on veut detecter, puis pool remplie dans revents, l'event qui se passe.
-
-
-TO do list:
-	-refaire le message 352 JOIN

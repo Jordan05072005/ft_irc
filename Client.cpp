@@ -3,7 +3,7 @@
 
 Client::Client(void){}
 
-Client::Client(int fd, sockaddr_in addr, socklen_t len) : _fd(fd), _addr(addr), _len(len), _state(1)
+Client::Client(int fd, sockaddr_in addr, socklen_t len) : _fd(fd), _addr(addr), _len(len), _state(0)
 {
 	char ip_str[INET_ADDRSTRLEN];
 	inet_ntop(AF_INET, &(addr.sin_addr), ip_str, INET_ADDRSTRLEN);
@@ -68,7 +68,7 @@ void Client::setBuf(char *buf, int oct)
 /*-----------------------------------------------------------------------------------------------*/
 
 
-const std::string& Client::getNick(void) const
+std::string const& Client::getNick(void) const
 {
 	return (this->_nick);
 }
@@ -78,7 +78,7 @@ void Client::setNick(std::string& nick)
 	this->_nick = nick; 
 }
 
-const std::string& Client::getIdent(void) const
+std::string const& Client::getIdent(void) const
 {
 	return (this->_ident);
 }
@@ -89,18 +89,18 @@ void Client::setIdent(std::string& ident)
 }
 
 
-const std::string& Client::getRealName(void) const
+std::string const& Client::getRealName(void) const
 {
 	return (this->_realname);
 }
 
 void Client::setRealName(std::string& name)
 {
-	this->_realname= name;
+	this->_realname = name;
 }
 
 
-const std::string& Client::getHost(void) const
+std::string const& Client::getHost(void) const
 {
 	return (this->_host);
 }
@@ -115,19 +115,35 @@ void Client::setHost(std::string& host)
 /*-----------------------------------------------------------------------------------------------*/
 
 
-void	Client::addChannel(Channel& name)
+std::vector<Channel*>&	Client::getChannels(void)
 {
-	this->_channel.push_back(name);
+	return (this->_channel);
+}
+
+void	Client::addChannel(Channel* channel)
+{
+	this->_channel.push_back(channel);
+	return ;
+}
+
+void	Client::removeChannel(std::string const& name)
+{
+	for (int i = 0; i < this->_channel.size(); i++)
+	{
+		if (this->_channel[i]->getName() == name)
+			this->_channel.erase(this->_channel.begin() + i);
+	}
 	return ;
 }
 
 void	Client::removeAllChannels(void)
 {
-	for (size_t i = 0; i < this->_channel.size(); ++i)
+	for (int i = 0; i < this->_channel.size(); ++i)
 	{
-		this->_channel[i].removeUser(this->_nick);
+		this->_channel[i]->removeUser(this->_nick);
 		// TODO : add message de sortie de channel
 	}
+	this->_channel.clear();
 	return ;
 }
 
