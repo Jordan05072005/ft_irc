@@ -30,7 +30,7 @@ Channel& Channel::operator=(Channel const& other)
 
 Channel::Channel(std::string const& _name, Client* creator)
 {
-	this->_creationtime = std::time(nullptr);
+	this->_creationtime = std::time(NULL);
 	this->_name = _name;
 	this->_topic.topic = "";
 	this->_topic.modifBy = "";
@@ -135,25 +135,25 @@ const std::vector<t_invite>&	Channel::getInvite(void) const
 /*-----------------------------------------------------------------------------------------------*/
 
 
-void	Channel::addUser(Client* user)
+void	Channel::addUser(Client& user)
 {
-	this->_users.push_back(user);
+	this->_users.push_back(&user);
 	return ;
 }
 
-void	Channel::addOperator(Client* user)
+void	Channel::addOperator(Client& user)
 {
-	this->_users.push_back(user);
+	this->_users.push_back(&user);
 	return ;
 }
 
-void Channel::addInvite(Client* client)
+void Channel::addInvite(Client& client)
 {
 	t_invite invite;
 
-	invite.client = client;
+	invite.client = &client;
 	invite.time = std::time(NULL);
-	if (this->checkInvite(client->getNick()))
+	if (this->checkInvite(client.getNick()))
 		return ;
 	this->_invite.push_back(invite);
 }
@@ -162,13 +162,14 @@ void Channel::addInvite(Client* client)
 /*-----------------------------------------------------------------------------------------------*/
 
 
-void	Channel::removeUser(std::string& nick)
+void	Channel::removeUser(const std::string& nick)
 {
 	for (size_t i = 0; i < this->_users.size(); i++)
 	{
 		if (this->_users[i]->getNick() == nick)
 			this->_users.erase(this->_users.begin() + i);
 	}
+	// TODO : add message de sortie de channel
 }
 
 void	Channel::removeInvite(void)
@@ -219,11 +220,12 @@ int Channel::checkInvite(const std::string& nick)
 /*-----------------------------------------------------------------------------------------------*/
 
 
-std::string	Channel::createStringUsers(void) const
+std::string	Channel::createStringUsers(void)
 {
 	std::string str;
 
-	for (int i = 0; i < this->_users.size(); ++i)
+	std::cout << this->_users.size() << std::endl;
+	for (int i = 0; i < (int)this->_users.size(); ++i)
 	{
 		if (i > 0)
 			str += " ";

@@ -63,20 +63,21 @@ class Server
 
 		int		errorState(int state, std::string& cmd, Client& client);
 		void	sendMessLocal(std::string err, std::string cmd, Client& client, std::string body);
-		void	sendMessGlobal(std::string channel, std::string cmd, std::string mess, Client& c);
+		void	sendMessGlobal(std::string cmd, std::string mess, Client& c);
+		void	sendMessChannel(std::string channel, std::string argm, std::string cmd, std::string mess, Client& c);
 	
-		int		getIndexChannel(std::string& name);
+		int		getIndexChannel(const std::string& name);
 		Client&	getClient(std::string& nick);
 
 		void	delClient(int index);
 		void	delInvite(void);
-		
+		void	delAllChannelClient(Client& client, std::string& cmd, std::string mess);
 	public :
 		//Server(int port, std::string const& password); // canonical
 		void 			init(int port, std::string const& password);
 		static Server&	getInstance(void);
 		void			closeAll();
-		~Server(void) // canonical
+		~Server(void); // canonical
 
 };
 

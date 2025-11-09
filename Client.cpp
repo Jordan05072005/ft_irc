@@ -128,7 +128,7 @@ void	Client::addChannel(Channel* channel)
 
 void	Client::removeChannel(std::string const& name)
 {
-	for (int i = 0; i < this->_channel.size(); i++)
+	for (int i = 0; i < (int)this->_channel.size(); i++)
 	{
 		if (this->_channel[i]->getName() == name)
 			this->_channel.erase(this->_channel.begin() + i);
@@ -138,13 +138,7 @@ void	Client::removeChannel(std::string const& name)
 
 void	Client::removeAllChannels(void)
 {
-	for (int i = 0; i < this->_channel.size(); ++i)
-	{
-		this->_channel[i]->removeUser(this->_nick);
-		// TODO : add message de sortie de channel
-	}
 	this->_channel.clear();
-	return ;
 }
 
 

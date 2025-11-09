@@ -3,6 +3,8 @@
 
 # include "header.hpp"
 
+class Channel;
+
 class Client
 {
 	private :

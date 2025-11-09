@@ -79,18 +79,18 @@ class Channel
 		const std::vector<t_invite>&	getInvite(void) const;
 
 
-		void							addUser(Client* user);
-		void							addOperator(Client* user);
-		void							addInvite(Client* client);
+		void							addUser(Client& user);
+		void							addOperator(Client& user);
+		void							addInvite(Client& client);
 
-		void							removeUser(std::string& nick);
+		void							removeUser(const std::string& nick);
 		void							removeInvite(void);
 
 		int								checkUser(const std::string& nick);
 		int								checkOperator(const std::string& nick);
 		int								checkInvite(const std::string& nick);
 
-		std::string						createStringUsers(void) const;
+		std::string						createStringUsers(void);
 };
 
 #endif
