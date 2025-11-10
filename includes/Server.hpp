@@ -22,6 +22,7 @@ class Server
 		// Server&	operator=(Server const& other); // canonical
 		
 		bool					_init;
+		bool 					_close;
 		int						_port_serv; // port donné au constructeur
 		std::string				_password; // mdp donné au constructeur
 		
@@ -56,6 +57,8 @@ class Server
 		int		checkTopic(Client& client, std::vector<std::string>& mess);
 		int		checkJoin(Client& client, std::vector<std::string>& mess);
 		int		checkMode(Client& client, std::vector<std::string>& mess);
+		int		checkPrivmsg(Client& client, std::vector<std::string>& mess);
+
 
 		int		checkUniqueNick(std::string& nick);
 		int		checkExistClient(std::string& nick);
@@ -63,8 +66,9 @@ class Server
 
 		int		errorState(int state, std::string& cmd, Client& client);
 		void	sendMessLocal(std::string err, std::string cmd, Client& client, std::string body);
+		void	sendMessUser(Client& s, Client& r, std::string cmd, std::string body);
 		void	sendMessGlobal(std::string cmd, std::string mess, Client& c);
-		void	sendMessChannel(std::string channel, std::string argm, std::string cmd, std::string mess, Client& c);
+		void	sendMessChannel(std::string channel, std::string cmd, std::string argm, std::string mess, Client& c);
 	
 		int		getIndexChannel(const std::string& name);
 		Client&	getClient(std::string& nick);
@@ -77,6 +81,7 @@ class Server
 		void 			init(int port, std::string const& password);
 		static Server&	getInstance(void);
 		void			closeAll();
+		void close_serv();
 		~Server(void); // canonical
 
 };

@@ -33,7 +33,8 @@ Client& Client::operator=(const Client& cpy)
 	return (*this);
 }
 
-Client::~Client(void){}
+Client::~Client(void){
+}
 
 
 /*-----------------------------------------------------------------------------------------------*/

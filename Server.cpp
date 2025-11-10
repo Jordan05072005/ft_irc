@@ -36,6 +36,7 @@ void	Server::init(int port, std::string const& password)
 	{
 		this->_init = true;
 		this->_port_serv = port;
+		this->_close = false;
 		this->_password.assign(password);
 		this->initServ();
 
@@ -54,6 +55,7 @@ void	Server::init(int port, std::string const& password)
 		this->_cmd.push_back(init_cmd("TOPIC", &Server::checkTopic, 2));
 		this->_cmd.push_back(init_cmd("JOIN", &Server::checkJoin, 2));
 		this->_cmd.push_back(init_cmd("MODE", &Server::checkMode, 2));
+		this->_cmd.push_back(init_cmd("PRIVMSG", &Server::checkPrivmsg, 2));
 
 		this->run();
 	}
@@ -63,15 +65,25 @@ void	Server::init(int port, std::string const& password)
 
 Server::~Server(void){}
 
+void Server::close_serv(){
+	this->_close = true;
+}
+
 void Server::closeAll()
 {
-	for (size_t i = 0; i < this->_fds.size(); i++)
+	std::string message;
+	size_t size = this->_clients.size();
+	for (size_t i = 0; i < size; i++)
 	{
-		if (i == 0)
-			close(this->_fds[0].fd);
-		else
-			this->delClient(i);
+		std::string message = "ERROR :Closing Link: " + this->_clients[0]->getNick() + " (Server shutting down)\r\n";
+		send(this->_clients[0]->getFd(), message.c_str(), message.size(), 0);
+		this->delClient(1);
 	}
+	close(this->_fds[0].fd);
+	for (size_t i = 0; i < this->_channel.size(); i++){
+		delete this->_channel[i];
+	}
+	exit(0);
 }
 
 
@@ -135,19 +147,17 @@ void Server::run(void)
 	char 				buf[512];
 	int 				oct; // nombre d'octets lus renvoyés par recv
 
-	while (1)
+	while (!this->_close)
 	{
-		err = poll(this->_fds.data(), this->_fds.size(), POOL_TIME); // poll(pointeur sur tableau, taille tableau, timeout)
-		if (err < 0)
+		setup_signals();
+		err = poll(this->_fds.data(), this->_fds.size(), POOL_TIME); // poll(pointeur sur tableau, taille tableau,timeout)
+		if (err < 0 && !this->_close)
 			throw std::runtime_error("Error: poll");
 		this->delInvite();
-		setup_signals();
 
 		// traitement server socket
 		if (this->_fds[0].revents & POLLIN) // & opération binaire, indique si le flag POLLIN est "activé", renvoie 0 ou POLLIN
 		{
-			if (this->_clients.size() >= 1)
-				std::cout << "before " << this->_clients[0]->getState()<< std::endl;
 			client_fd = accept(this->_fds[0].fd, (sockaddr*)&client_addr, &client_len); // renvoie le socket client et stocke ses données dans une struct
 			if (client_fd < 0)
 				throw std::runtime_error("Error: acceptance client socket connection");
@@ -155,6 +165,7 @@ void Server::run(void)
 			this->_clients.push_back(new Client(client_fd, client_addr, client_len)); // ajout des données client au tableau
 			this->_fds.push_back(init_pollfd(client_fd, POLLIN, 0)); // ajout socket client au tableau
 			this->_fds[0].revents = 0; // remise à défaut, évènement non actif
+			std::cout << "New client, fd : " << client_fd << std::endl;
 		}
 
 		// traitement client sockets
@@ -172,21 +183,18 @@ void Server::run(void)
 				this->_clients[i - 1]->setBuf(buf, oct);
 
 				// partie test récuperation de requête
-				std::cout << "start" << this->_clients[i - 1]->getBuf() << "end" << std::endl;
-
 				if (this->requestHandler(*(this->_clients[i - 1])))
 				{
 					this->delClient(i--);
 					continue;
 				}
-				// send(this->_fds[i].fd, buf, oct, 0); // envoie une réponse à la requête client
 				this->_fds[i].revents = 0; // remise à défaut, évènement non actif
 			}
 			else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL))
 				this->delClient(i--);
 		}
 	}
-
+	this->closeAll();
 	return ;
 }
 
@@ -195,12 +203,12 @@ int Server::requestHandler(Client& client)
 {
 	int err;
 	std::vector<std::string> cmd = split(client.getBuf(), '\n');
-	std::cout << "size" << cmd.size() << std::endl;
 	for (size_t j = 0; j < cmd.size(); j++){
 		std::vector<std::string> mess = split(cmd[j], ' ');
 		err = -1;
 		if (mess.size() <= 0)
 			continue;
+		std::cout << "cmd :" << cmd[j] << std::endl;
 		for (size_t i = 0; i < this->_cmd.size(); i++)
 		{
 			if (mess[0] == this->_cmd[i].name)
@@ -209,7 +217,7 @@ int Server::requestHandler(Client& client)
 					if ((err = this->errorState(client.getState(), mess[0], client)))
 						return (1);
 				}
-				if ((err = (this->*(_cmd[i].pars))(client, mess)))
+				else if ((err = (this->*(_cmd[i].pars))(client, mess)))
 					return (1);
 			}
 		}
@@ -227,9 +235,17 @@ int	Server::checkCap(Client& client, std::vector<std::string>& mess)
 {
 	std::string message;
 
-	message = ":irc CAP * LS :";
-	send(client.getFd(), message.c_str(), message.size(), 0);
-	(void)mess;
+	if (mess[1] == "LS"){
+		message = ":irc CAP * LS :\r\n";
+		send(client.getFd(), message.c_str(), message.size(), 0);
+	}
+	else if (mess[1] == "END"){
+		if (!client.getIdent().empty() && !client.getNick().empty())
+		{
+			client.setState(client.getState() + 1);
+			this->sendMessLocal("001", "", client, "Welcome to the IRC Network");
+		}
+	}
 	return 0;
 }
 
@@ -243,9 +259,7 @@ int Server::checkPass(Client& client, std::vector<std::string>& mess)
 	if (mess[1] != this->_password)
 		return (this->sendMessLocal("464", "", client, "Incorrect password"), 1);
 
-	std::cout << "dans pass"<< client.getState() << std::endl;
 	client.setState(client.getState() + 1);
-	std::cout << "dans pass" << client.getState() << std::endl;
 	return (0);
 }
 
@@ -258,12 +272,11 @@ int Server::checkNick(Client& client, std::vector<std::string>& mess)
 	if (this->checkUniqueNick(mess[1]))
 		return (this->sendMessLocal("433", "", client, "Nickname is already in use"), 0);
 	client.setNick(mess[1]);
-	if (!client.getIdent().empty())
-	{
-		client.setState(client.getState() + 1);
-		this->sendMessLocal("001", "", client, "Welcome to the IRC Network");
-	}
-	
+	// if (!client.getIdent().empty())
+	// {
+	// 	client.setState(client.getState() + 1);
+	// 	this->sendMessLocal("001", "", client, "Welcome to the IRC Network");
+	// }
 	return 0;
 }
 
@@ -283,12 +296,12 @@ int Server::checkUser(Client& client, std::vector<std::string>& mess)
 		realname += mess[i];
 	}
 	client.setRealName(realname.erase(0, 1));
-	if (!client.getNick().empty())
-	{
-		client.setState(client.getState() + 1);
-		this->sendMessLocal("001", "", client, "Welcome to the IRC Network");
-		// TODO : ajouter les autres messages de bienvenue
-	}
+	// if (!client.getNick().empty())
+	// {
+	// 	client.setState(client.getState() + 1);
+	// 	this->sendMessLocal("001", "", client, "Welcome to the IRC Network");
+	// 	// TODO : ajouter les autres messages de bienvenue
+	// }
 	return 0;
 }
 
@@ -343,7 +356,7 @@ int	Server::checkKick(Client& client, std::vector<std::string>& mess)
 	}
 	else
 		message = mess[3];
-	this->sendMessChannel(mess[1], mess[1] + " " + mess[2], mess[0], message, client);
+	this->sendMessChannel(mess[1], mess[0], mess[1] + " " + mess[2], message, client);
 	channel->removeUser(mess[2]);
 	if (channel->getUsers().size() == 0)
 	{
@@ -360,20 +373,25 @@ int	Server::checkKick(Client& client, std::vector<std::string>& mess)
 int Server::checkInvite(Client& client, std::vector<std::string>& mess)
 {
 	Channel* channel;
+	int err = 0;
 
 	if (mess.size() < 3)
 		return (this->sendMessLocal("461", mess[0], client, "Not enough parameters"), 0);
-	if (!this->checkExistClient(mess[1]))
-		return (this->sendMessLocal("401", mess[1], client, "No such nick/channel"), 0);
-	if (!this->checkExistChannel(mess[2]))
-		return (this->sendMessLocal("403", mess[2], client, "No such channel"), 0);
+	if (!this->checkExistClient(mess[1]) && err++)
+		this->sendMessLocal("401", mess[1], client, "No such nick/channel");
+	if (!this->checkExistChannel(mess[2]) && err++)
+		this->sendMessLocal("403", mess[2], client, "No such channel");
+	if (err > 0)
+			return 0;
 	channel = this->_channel[this->getIndexChannel(mess[2])];
 	if (!channel->checkUser(client.getNick()))
 		return (this->sendMessLocal("442", mess[2], client, "You're not on that channel"), 0);
 	if (channel->getOptInviteOnly() && !channel->checkOperator(client.getNick()))
 		return (this->sendMessLocal("482", mess[2], client, "You're not channel operator"), 0);
-	this->sendMessLocal("341", mess[1] + " #" + mess[2], client, "");
-	this->sendMessLocal("", mess[0], client, mess[2]);
+	if (channel->checkUser(mess[1]))
+		return (this->sendMessLocal("443", client.getNick() + " " + mess[1] + " " + mess[2], client, "is already on channel"), 0);
+	this->sendMessLocal("341", mess[1] + " " + mess[2], client, "");
+	this->sendMessLocal("", mess[0], this->getClient(mess[1]), mess[2]);
 	channel->addInvite(this->getClient(mess[1]));
 	return (0);
 }
@@ -421,13 +439,12 @@ int Server::checkTopic(Client& client, std::vector<std::string>& mess)
 		message.erase(0, 1);
 	}
 	channel->setTopic(message, client.getNick());
-	return(this->sendMessChannel(mess[1], mess[1], mess[0], message, client), 0);
+	return(this->sendMessChannel(mess[1], mess[0], mess[1], message, client), 0);
 }
 
 // JOIN [#channel,&channel] [key,key]
 int		Server::checkJoin(Client& client, std::vector<std::string>& mess)
 {
-	std::cout << "dans jon" << std::endl;
 	if (mess.size() < 2 || mess.size() > 3)
 		return (this->sendMessLocal("461", mess[0], client, "Not enough parameters"), 0);
 	if (mess.size() == 2 && mess[1] == "0")
@@ -508,7 +525,7 @@ int		Server::checkJoin(Client& client, std::vector<std::string>& mess)
 	client.addChannel(this->_channel[this->getIndexChannel(mess_cpy[1])]);
 	// TODO : revoir le message qd qqn join
 	// :Alice!~alice@host JOIN :#test (par tous users du channel et elle-même)
-	this->sendMessChannel(mess_cpy[1], mess_cpy[1], mess_cpy[0], "", client);
+	this->sendMessChannel(mess_cpy[1], mess_cpy[0], mess_cpy[1], "", client);
 	if (!channel->getTopic().topic.empty())
 		this->sendMessLocal("332", mess_cpy[1], client, channel->getTopic().topic);
 	else
@@ -534,6 +551,39 @@ int		Server::checkMode(Client& client, std::vector<std::string>& mess)
 		return (this->sendMessLocal("461", mess[0], client, "Not enough parameters"), 0);
 	return (0);
 }
+
+//PRIVMSG <receiver>{,<receiver>} :<text to be sent>
+int		Server::checkPrivmsg(Client& client, std::vector<std::string>& mess){
+	std::vector<std::string> argm;
+
+	if (mess.size() < 2)
+		return (this->sendMessLocal("461", mess[0], client, "Not enough parameters"), 0);
+	if (mess.size() < 3 || mess[2][0] != ':')
+		return (this->sendMessLocal("412", "", client, "No text to send"), 0);
+	argm = split(mess[1], ',');
+	mess[2].erase(0, 1);
+	for (size_t i = 0; i < argm.size(); i++){
+		if (argm[i][0] != '#'){
+			if (!this->checkExistClient(argm[i])){
+				this->sendMessLocal("401", argm[i], client, "No such nick/channel");
+			}
+			else
+				this->sendMessUser(client, this->getClient(argm[i]), mess[0], mess[2]);
+		}
+		else{
+			if (!this->checkExistChannel(argm[i]))
+				this->sendMessLocal("403", argm[i], client, "No such channel");
+			else if (!this->_channel[this->getIndexChannel(argm[i])]->checkUser(client.getNick()))
+				this->sendMessLocal("442", argm[i], client, "You're not on that channel");
+			else
+				this->sendMessChannel(argm[i], mess[0], argm[i], mess[2], client);
+		}
+	}
+	return (0);
+}
+
+
+
 
 
 /*-----------------------------------------------------------------------------------------------*/
@@ -575,9 +625,6 @@ int	Server::checkExistChannel(std::string &name)
 
 int Server::errorState(int state, std::string& cmd, Client& client)
 {
-	std::cout << client.getState() << std::endl;
-	std::cout << client.getNick() << std::endl;
-	std::cout << this->_clients.size() << std::endl;
 	if (state == 0)
 		return (this->sendMessLocal("461", "", client, "Password needed"), 1);
 	else if (state  == 1)
@@ -596,11 +643,26 @@ void Server::sendMessLocal(std::string err, std::string cmd, Client& c, std::str
 	if (nick.empty())
 		nick = "*";
 	if (err.empty())
-		ss << ":" << nick << "!" << (c.getIdent().empty() ? "*" : c.getIdent()) << "@" << c.getHost() << (cmd.empty() ? "" : (" " + cmd)) << " " << nick << " " << (body.empty() ? "" : (": " + body)) << "\r\n";
+		ss << ":" << nick << "!" << (c.getIdent().empty() ? "*" : c.getIdent()) << "@" << c.getHost() << (cmd.empty() ? "" : (" " + cmd)) << " " << nick << (body.empty() ? "" : (" :" + body)) << "\r\n";
 	else
-		ss << ":irc " << err << " " << nick << (cmd.empty() ? "" : (" " + cmd)) << (body.empty() ? "" : (" :" + body)) << "\r\n";
+		ss << ":irc.42.fr " << err << " " << nick << (cmd.empty() ? "" : (" " + cmd)) << (body.empty() ? "" : (" :" + body)) << "\r\n";
 	err_mess = ss.str();
 	send(c.getFd(), err_mess.c_str(), err_mess.size(), 0);
+}
+
+//:Jo!~jo@127.0.0.1 PRIVMSG Max :Salut Max, ça va ?
+void	Server::sendMessUser(Client& s, Client& r, std::string cmd, std::string body)
+{
+	std::string err_mess;
+	std::string nick;
+	std::stringstream ss;
+
+	nick = s.getNick();
+	if (nick.empty())
+		nick = "*";
+	ss << ":" << nick << "!" << (s.getIdent().empty() ? "*" : s.getIdent()) << "@" << s.getHost() << (cmd.empty() ? "" : (" " + cmd)) << " " << r.getNick() << (body.empty() ? "" : (" :" + body)) << "\r\n";
+	err_mess = ss.str();
+	send(r.getFd(), err_mess.c_str(), err_mess.size(), 0);
 }
 
 void Server::sendMessGlobal(std::string cmd, std::string mess, Client& c)
@@ -616,7 +678,7 @@ void Server::sendMessGlobal(std::string cmd, std::string mess, Client& c)
 }
 
 // Alice JOIN :#général
-void Server::sendMessChannel(std::string channel, std::string argm, std::string cmd, std::string mess, Client& c){
+void Server::sendMessChannel(std::string channel, std::string cmd, std::string argm, std::string mess, Client& c){
 	std::stringstream ss;
 	std::string message;
 	int i;
@@ -692,7 +754,7 @@ void	Server::delAllChannelClient(Client& client, std::string& cmd, std::string m
 	for (std::vector<Channel*>::iterator it = client.getChannels().begin(); it != client.getChannels().end(); it++)
 	{
 		(*it)->removeUser(client.getNick());
-		this->sendMessChannel((*it)->getName(), (*it)->getName(), cmd, mess, client);
+		this->sendMessChannel((*it)->getName(), cmd, (*it)->getName(), mess, client);
 		if ((*it)->getUsers().size() == 0)
 		{
 			delete this->_channel[this->getIndexChannel((*it)->getName())];

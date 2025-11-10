@@ -5,9 +5,8 @@ void handle_signal(int sig)
 	Server& serv = Server::getInstance();
 	if (sig == SIGINT || sig == SIGTERM)
 	{
-			serv.closeAll();
+			serv.close_serv();
 			std::cout << "bye" << std::endl;
-			exit(0);
 	}
 	return ;
 }
