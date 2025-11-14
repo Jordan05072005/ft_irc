@@ -48,11 +48,14 @@ class Server
 		int		checkTopic(Client& client, std::vector<std::string>& mess);
 		int		checkJoin(Client& client, std::vector<std::string>& mess);
 		int		checkMode(Client& client, std::vector<std::string>& mess);
+		int		checkPart(Client& client, std::vector<std::string>& mess);
+		int		checkNotice(Client& client, std::vector<std::string>& mess);
+		int		checkList(Client& client, std::vector<std::string>& mess);
 		int		checkPrivmsg(Client& client, std::vector<std::string>& mess);
 
-		int		checkUniqueNick(std::string& nick);
-		int		checkExistClient(std::string& nick);
-		int		checkExistChannel(std::string& name);
+		int		checkUniqueNick(std::string const& nick);
+		int		checkExistClient(std::string const& nick);
+		int		checkExistChannel(std::string const& name);
 
 		int		errorState(int state, std::string const& cmd, Client& client);
 		void	sendMessLocal(std::string const& err, std::string const& cmd, Client const& client, std::string const& body);

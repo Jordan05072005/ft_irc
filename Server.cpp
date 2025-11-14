@@ -55,6 +55,9 @@ void	Server::init(int port, std::string const& password)
 		this->_cmd.push_back(init_cmd("TOPIC", &Server::checkTopic, 2));
 		this->_cmd.push_back(init_cmd("JOIN", &Server::checkJoin, 2));
 		this->_cmd.push_back(init_cmd("MODE", &Server::checkMode, 2));
+		this->_cmd.push_back(init_cmd("PART", &Server::checkMode, 2));
+		this->_cmd.push_back(init_cmd("NOTICE", &Server::checkMode, 2));
+		this->_cmd.push_back(init_cmd("LIST", &Server::checkMode, 2));
 		this->_cmd.push_back(init_cmd("PRIVMSG", &Server::checkPrivmsg, 2));
 
 		this->run();
@@ -473,9 +476,9 @@ int		Server::checkJoin(Client& client, std::vector<std::string>& mess)
 	{
 		std::vector<std::string> parameters;
 
-		parameters.push_back(mess_cpy[0]); // "JOIN"
 		while (mess_cpy[1].find(',') != std::string::npos)
 		{
+			parameters.push_back(mess_cpy[0]); // "JOIN"
 			parameters.push_back(mess_cpy[1].substr(0, mess_cpy[1].find(',')));
 			mess_cpy[1] = mess_cpy[1].substr(mess_cpy[1].find(',') + 1);
 			if (mess_cpy.size() == 3 && mess_cpy[2].find(',') != std::string::npos)
@@ -570,7 +573,6 @@ int		Server::checkJoin(Client& client, std::vector<std::string>& mess)
 // MODE #channel +kti secret poulain +l 10 +o <client> cage => poulain et cage ignorés
 int		Server::checkMode(Client& client, std::vector<std::string>& mess)
 {
-
 	if (mess.size() < 2)
 		return (this->sendMessLocal("461", mess[0], client, "Not enough parameters"), 0);
 	
@@ -725,6 +727,123 @@ int		Server::checkMode(Client& client, std::vector<std::string>& mess)
 	return (0);
 }
 
+// PART #channel,#channel <reason>
+// :nick!user@host PART #channel :reason
+// :nick!user@host PART #channel
+int		Server::checkPart(Client& client, std::vector<std::string>& mess)
+{
+	if (mess.size() < 2)
+		return (this->sendMessLocal("461", mess[0], client, "Not enough parameters"), 0);
+
+	// separation of many commands into one at a time
+	std::vector<std::string> mess_cpy = mess;
+	if (mess_cpy[1].find(',') != std::string::npos)
+	{
+		std::vector<std::string> parameters;
+
+		while (mess_cpy[1].find(',') != std::string::npos)
+		{
+			parameters.push_back(mess_cpy[0]); // "PART"
+			parameters.push_back(mess_cpy[1].substr(0, mess_cpy[1].find(',')));
+			mess_cpy[1] = mess_cpy[1].substr(mess_cpy[1].find(',') + 1);
+			for (size_t i = 2; i < mess_cpy.size(); i++)
+				parameters.push_back(mess_cpy[i]);
+			this->checkPart(client, parameters);
+			parameters.clear();
+		}
+	}
+	
+	if (!this->checkExistChannel(mess_cpy[1]))
+		return (this->sendMessLocal("403", mess_cpy[1], client, "No such channel"), 0);
+
+	Channel*	channel = this->_channel[this->getIndexChannel(mess_cpy[1])];
+
+	if (!channel->checkUser(client.getNick()))
+		return (this->sendMessLocal("442", mess[1], client, "You're not on that channel"), 0);
+	
+	client.removeChannel(mess_cpy[1]);
+	channel->removeUser(client.getNick());
+
+	std::string	reason;
+	if (mess_cpy.size() != 3)
+		reason = "";
+	else
+	{
+		for (size_t i = 2; i < mess_cpy.size(); i++)
+		{
+			if (i != 2)
+				reason += ' ';
+			reason += mess_cpy[i];
+		}
+	}
+	
+	// TODO : revoir format message
+	return (this->sendMessChannel(mess_cpy[1], mess_cpy[1], mess_cpy[0], reason, client), 0);
+}
+
+// DONT SEND ERRORS JUST DO NOTHING
+// NOTICE <msgtarget> <mess>
+// if target is channel, all users receives apart himself
+int		Server::checkNotice(Client& client, std::vector<std::string>& mess)
+{
+	if (mess.size() < 3)
+		return (1);
+	
+	std::string message;
+	for (size_t i = 2; i < mess.size(); i++)
+	{
+		if (i != 2)
+			message += ' ';
+		message += mess[i];
+	}
+
+	if (this->checkExistClient(mess[1])) // send mess to someone
+	{
+		this->sendMessUser(client, this->getClient(mess[1]), mess[0], message);
+	}
+	else if (this->checkExistChannel(mess[1])) // send mess to channel
+	{
+		Channel*	channel = this->_channel[this->getIndexChannel(mess[1])];
+
+		if (channel->checkUser(client.getNick())) // if user in channel
+			this->sendMessChannel(mess[1], mess[1], mess[0], message, client);
+	}
+	return (0);
+}
+
+// TODO : revoir format messages
+int		Server::checkList(Client& client, std::vector<std::string>& mess)
+{
+	this->sendMessLocal("321", "Channel", client, "Users Name");
+
+	if (mess.size() > 1)
+	{
+		// separation of many channels into one at a time
+		std::vector<std::string> mess_cpy = mess;
+		Channel*	channel;
+		while (mess_cpy[1].find(',') != std::string::npos)
+		{
+			if (this->checkExistChannel(mess_cpy[1].substr(0, mess_cpy[1].find(','))))
+			{
+				channel = this->_channel[this->getIndexChannel(mess_cpy[1].substr(0, mess_cpy[1].find(',')))];
+				this->sendMessLocal("322", channel->getName() + channel->getUsersCount(), client, channel->getTopic().topic);
+			}
+			mess_cpy[1] = mess_cpy[1].substr(mess_cpy[1].find(',') + 1);
+		}
+	}
+	else
+	{
+		for (std::vector<Channel*>::const_iterator	it = this->_channel.begin(); it != this->_channel.end(); it++)
+		{
+			this->sendMessLocal("322", (*it)->getName() + (*it)->getUsersCount(), client, (*it)->getTopic().topic);
+		}
+	}
+
+	this->sendMessLocal("323", "", client, "End of LIST");
+	return (0);
+}
+
+
 //PRIVMSG <receiver>{,<receiver>} :<text to be sent>
 int		Server::checkPrivmsg(Client& client, std::vector<std::string>& mess)
 {
@@ -762,7 +881,7 @@ int		Server::checkPrivmsg(Client& client, std::vector<std::string>& mess)
 /*-----------------------------------------------------------------------------------------------*/
 
 
-int	Server::checkUniqueNick(std::string &nick)
+int	Server::checkUniqueNick(std::string const& nick)
 {
 	for (size_t i = 0; i < this->_clients.size(); i++)
 	{
@@ -772,7 +891,7 @@ int	Server::checkUniqueNick(std::string &nick)
 	return 0;
 }
 
-int Server::checkExistClient(std::string& nick)
+int Server::checkExistClient(std::string const& nick)
 {
 	for (size_t i = 0; i < this->_clients.size(); i++)
 	{
@@ -782,7 +901,7 @@ int Server::checkExistClient(std::string& nick)
 	return 0;
 }
 
-int	Server::checkExistChannel(std::string &name)
+int	Server::checkExistChannel(std::string const& name)
 {
 	for (size_t i = 0; i < this->_channel.size(); i++)
 	{

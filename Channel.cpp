@@ -174,6 +174,14 @@ std::vector<Client*> const&		Channel::getUsers(void) const
 	return (this->_users);
 }
 
+std::string						Channel::getUsersCount(void) const
+{
+	std::stringstream	ss;
+
+	ss << this->_users.size();
+	return (ss.str());
+}
+
 std::vector<Client*> const&		Channel::getOperators(void) const
 {
 	return (this->_operators);

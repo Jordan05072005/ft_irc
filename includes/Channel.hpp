@@ -75,6 +75,7 @@ class Channel
 		void							setOptUserLimit(bool opt);
 
 		std::vector<Client*> const&		getUsers(void) const;
+		std::string						getUsersCount(void) const;
 		std::vector<Client*> const&		getOperators(void) const;
 		const std::vector<t_invite>&	getInvite(void) const;
 
