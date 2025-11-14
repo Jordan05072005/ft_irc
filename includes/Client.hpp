@@ -23,16 +23,6 @@ class Client
 		std::string _realname;
 		std::string	_host;
 
-		/*
-			!!!!!!!!
-
-			!std::vector<Channel*> au lieu de std::vector<Channel> dans serveur car adresses changent à chaque push_back
-			!donc création des Channel avec new
-
-			!penser a ajouter et supprimer les channels du tableau suivant les mouvements du client
-
-			!!!!!!!!
-		*/
 		std::vector<Channel*>	_channel;
 
 		int						_state; // state = 1 -> login, state = 2 -> register

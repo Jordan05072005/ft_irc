@@ -32,16 +32,7 @@ class Server
 		sockaddr_in				_addr; // données à mettre dans le socket principal
 		std::vector<t_cmd>		_cmd;
 		std::vector<Channel*>	_channel;
-		/*
-			!!!!!!!!
 
-			!std::vector<Channel* / Client*> au lieu de std::vector<Channel / Client> car adresses changent à chaque push_back
-			!donc création des Channels / Clients avec new
-
-			!penser a new et delete les channels/clients du tableau suivant les mouvements des clients
-
-			!!!!!!!!
-		*/
 		void	initServ(void);
 		void	bindAndListen(sockaddr_in const& addr);
 		void	run(void);
@@ -59,29 +50,28 @@ class Server
 		int		checkMode(Client& client, std::vector<std::string>& mess);
 		int		checkPrivmsg(Client& client, std::vector<std::string>& mess);
 
-
 		int		checkUniqueNick(std::string& nick);
 		int		checkExistClient(std::string& nick);
 		int		checkExistChannel(std::string& name);
 
-		int		errorState(int state, std::string& cmd, Client& client);
-		void	sendMessLocal(std::string err, std::string cmd, Client& client, std::string body);
-		void	sendMessUser(Client& s, Client& r, std::string cmd, std::string body);
-		void	sendMessGlobal(std::string cmd, std::string mess, Client& c);
-		void	sendMessChannel(std::string channel, std::string cmd, std::string argm, std::string mess, Client& c);
+		int		errorState(int state, std::string const& cmd, Client& client);
+		void	sendMessLocal(std::string const& err, std::string const& cmd, Client const& client, std::string const& body);
+		void	sendMessUser(Client const& s, Client const& r, std::string const& cmd, std::string const& body);
+		void	sendMessGlobal(std::string const& cmd, std::string const& mess, Client const& c);
+		void	sendMessChannel(std::string const& channel, std::string const& argm, std::string const& cmd, std::string const& mess, Client const& c);
 	
-		int		getIndexChannel(const std::string& name);
-		Client&	getClient(std::string& nick);
+		int		getIndexChannel(std::string const& name);
+		Client&	getClient(std::string const& nick);
 
 		void	delClient(int index);
 		void	delInvite(void);
 		void	delAllChannelClient(Client& client, std::string& cmd, std::string mess);
+		
 	public :
-		//Server(int port, std::string const& password); // canonical
 		void 			init(int port, std::string const& password);
 		static Server&	getInstance(void);
 		void			closeAll();
-		void close_serv();
+		void			close_serv();
 		~Server(void); // canonical
 
 };

@@ -1,4 +1,4 @@
-SRC= main.c Server.cpp Client.cpp utils.cpp Channel.cpp signal.cpp
+SRC= main.cpp Server.cpp Client.cpp utils.cpp Channel.cpp signal.cpp
 
 OBJ =${SRC:.c=.o}
 
@@ -8,7 +8,7 @@ CC = c++
 
 RM = rm -f
 
-NAME = irc
+NAME = ircserv
 
 .c.o:
 	@${CC} ${CFLAGS} -c $< -o ${<:.c=.o}
