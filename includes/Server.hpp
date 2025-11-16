@@ -58,6 +58,9 @@ class Server
 		int		checkJoin(Client& client, std::vector<std::string>& mess);
 		int		checkMode(Client& client, std::vector<std::string>& mess);
 		int		checkPrivmsg(Client& client, std::vector<std::string>& mess);
+		int		checkNames(Client& client, std::vector<std::string>& mess);
+		int		checkWho(Client& client, std::vector<std::string>& mess);
+
 
 
 		int		checkUniqueNick(std::string& nick);

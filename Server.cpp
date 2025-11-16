@@ -56,6 +56,8 @@ void	Server::init(int port, std::string const& password)
 		this->_cmd.push_back(init_cmd("JOIN", &Server::checkJoin, 2));
 		this->_cmd.push_back(init_cmd("MODE", &Server::checkMode, 2));
 		this->_cmd.push_back(init_cmd("PRIVMSG", &Server::checkPrivmsg, 2));
+		this->_cmd.push_back(init_cmd("NAMES", &Server::checkNames, 2));
+		this->_cmd.push_back(init_cmd("WHO", &Server::checkWho, 2));
 
 		this->run();
 	}
@@ -144,7 +146,7 @@ void Server::run(void)
 	socklen_t			client_len = sizeof(client_addr);
 	int 				client_fd; // socket client
 
-	char 				buf[512];
+	char				buf[1024];
 	int 				oct; // nombre d'octets lus renvoyés par recv
 
 	while (!this->_close)
@@ -358,6 +360,7 @@ int	Server::checkKick(Client& client, std::vector<std::string>& mess)
 		message = mess[3];
 	this->sendMessChannel(mess[1], mess[0], mess[1] + " " + mess[2], message, client);
 	channel->removeUser(mess[2]);
+	client.removeChannel(mess[1]);
 	if (channel->getUsers().size() == 0)
 	{
 		delete this->_channel[this->getIndexChannel(channel->getName())];
@@ -555,6 +558,7 @@ int		Server::checkMode(Client& client, std::vector<std::string>& mess)
 //PRIVMSG <receiver>{,<receiver>} :<text to be sent>
 int		Server::checkPrivmsg(Client& client, std::vector<std::string>& mess){
 	std::vector<std::string> argm;
+	std::string message;
 
 	if (mess.size() < 2)
 		return (this->sendMessLocal("461", mess[0], client, "Not enough parameters"), 0);
@@ -562,13 +566,15 @@ int		Server::checkPrivmsg(Client& client, std::vector<std::string>& mess){
 		return (this->sendMessLocal("412", "", client, "No text to send"), 0);
 	argm = split(mess[1], ',');
 	mess[2].erase(0, 1);
+	for (size_t i = 2; i < mess.size(); i++)
+		message = message + (mess[i] + ((i + 1) == mess.size() ? "" : " "));
 	for (size_t i = 0; i < argm.size(); i++){
 		if (argm[i][0] != '#'){
 			if (!this->checkExistClient(argm[i])){
 				this->sendMessLocal("401", argm[i], client, "No such nick/channel");
 			}
 			else
-				this->sendMessUser(client, this->getClient(argm[i]), mess[0], mess[2]);
+				this->sendMessUser(client, this->getClient(argm[i]), mess[0], message);
 		}
 		else{
 			if (!this->checkExistChannel(argm[i]))
@@ -576,15 +582,74 @@ int		Server::checkPrivmsg(Client& client, std::vector<std::string>& mess){
 			else if (!this->_channel[this->getIndexChannel(argm[i])]->checkUser(client.getNick()))
 				this->sendMessLocal("442", argm[i], client, "You're not on that channel");
 			else
-				this->sendMessChannel(argm[i], mess[0], argm[i], mess[2], client);
+				this->sendMessChannel(argm[i], mess[0], argm[i], message, client);
 		}
 	}
 	return (0);
 }
 
+int		Server::checkNames(Client& client, std::vector<std::string>& mess){
+	std::vector<std::string> channels;
+	if (mess.size() == 1){
+		for (size_t i = 0; i < this->_channel.size(); i++){
+			this->sendMessLocal("353", "= " + this->_channel[i]->getName(), client, this->_channel[i]->createStringUsers());
+			this->sendMessLocal("366", this->_channel[i]->getName(), client, "End of /NAMES list");
+		}
+		return (0);
+	}
+	channels = split(mess[1], ',');
+	for (size_t i = 0; i < channels.size(); i++){
+		if (!this->checkExistChannel(channels[i]))
+			this->sendMessLocal("403", channels[i], client, "No such channel");
+		else{
+			this->sendMessLocal("353", "= " + channels[i], client, this->_channel[this->getIndexChannel(channels[i])]->createStringUsers());
+			this->sendMessLocal("366", channels[i], client, "End of /NAMES list");
+		}
+	}
+	return (0);
+}
 
-
-
+int		Server::checkWho(Client& client, std::vector<std::string>& mess){
+	std::vector<std::string> channels;
+	std::vector<Client*> clients;
+	if (mess.size() == 1){
+		for (size_t i = 0; i < this->_clients.size(); i++){
+			this->sendMessLocal("352", "* " + this->_clients[i]->getIdent() + " " +
+				this->_clients[i]->getHost() + " " + 
+				this->_clients[i]->getServ() + " " + 
+				this->_clients[i]->getNick() + " H", client, "0 " + this->_clients[i]->getRealName());
+		}
+		this->sendMessLocal("315", "*", client, "End of /WHO list");
+		return (0);
+	}
+	channels = split(mess[1], ',');
+	for (size_t i = 0; i < channels.size(); i++){
+		if (channels[i][0] == '#' && !this->checkExistChannel(channels[i]))
+			this->sendMessLocal("403", channels[i], client, "No such channel");
+		else if (channels[i][0] != '#' && !this->checkExistClient(channels[i]))
+			this->sendMessLocal("401", channels[i], client, "No such nick");
+		else if (channels[i][0] != '#'){
+			this->sendMessLocal("352", "* " + this->getClient(channels[i]).getIdent() + " " +
+				this->getClient(channels[i]).getHost() + " " + 
+				this->getClient(channels[i]).getServ() + " " + 
+				this->getClient(channels[i]).getNick() + " H", client, "0 " + 
+				this->getClient(channels[i]).getRealName());
+			this->sendMessLocal("315", channels[i], client, "End of /WHO list");
+		}
+		else{
+			clients = this->_channel[this->getIndexChannel(channels[i])]->getUsers();
+			for (size_t j = 0; j < clients.size(); j++){
+				this->sendMessLocal("352", channels[i]  + " " + clients[j]->getIdent() + " " +
+				clients[j]->getHost() + " " + 
+				clients[j]->getServ() + " " + 
+				clients[j]->getNick() + " H", client, "0 " + 
+				clients[j]->getRealName());
+			}
+			this->sendMessLocal("315", channels[i], client, "End of /WHO list");
+		}
+	}
+	return (0);
+}
 
 /*-----------------------------------------------------------------------------------------------*/
 
@@ -684,17 +749,15 @@ void Server::sendMessChannel(std::string channel, std::string cmd, std::string a
 	int i;
 	std::vector<Client*> t;
 
-	if (argm.empty()){
-		// Alice JOIN :#général
-		return ;
-	}
-	ss << ":" << (c.getNick().empty() ? "*" : c.getNick()) << "!~" << (c.getIdent().empty() ? "*" : c.getIdent()) << "@" << c.getHost() << " " << cmd << " " << argm << (mess.empty() ? "" : (" :" + mess)) << "\r\n";
+
+	ss << ":" << (c.getNick().empty() ? "*" : c.getNick()) << "!~" << (c.getIdent().empty() ? "*" : c.getIdent()) << "@" << c.getHost() << " " << cmd << (argm.empty() ? "" : (" " + argm)) << (mess.empty() ? "" : (" :" + mess)) << "\r\n";
 	message = ss.str();
 	i = this->getIndexChannel(channel);
 	t = this->_channel[i]->getUsers();
-	for (size_t i = 0; i < t.size(); i++)
-		send(t[i]->getFd(), message.c_str(), message.size(), 0);
-}
+	for (size_t i = 0; i < t.size(); i++){
+		if (cmd != "PRIVMSG" || t[i]->getNick() != c.getNick())
+			send(t[i]->getFd(), message.c_str(), message.size(), 0);
+	}}
 
 // :john!~john@127.0.0.1 PRIVMSG #general :Salut tout le monde ! 
 // pour Channel

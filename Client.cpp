@@ -8,6 +8,7 @@ Client::Client(int fd, sockaddr_in addr, socklen_t len) : _fd(fd), _addr(addr), 
 	char ip_str[INET_ADDRSTRLEN];
 	inet_ntop(AF_INET, &(addr.sin_addr), ip_str, INET_ADDRSTRLEN);
 	this->_host = ip_str;
+	this->_serv = "irc.42.fr";
 }
 
 Client::Client(const Client& cpy) : _state(1)
@@ -28,6 +29,7 @@ Client& Client::operator=(const Client& cpy)
 		this->_channel = cpy._channel;
 		this->_realname = cpy._realname;
 		this->_ident = cpy._ident;
+		this->_serv = cpy._serv;
 	}
 	// cpy.setFd(-1);
 	return (*this);
@@ -154,4 +156,13 @@ int Client::getState(void) const
 void Client::setState(int e)
 {
 	this->_state = e;
+}
+
+
+std::string const&		Client::getServ(void) const{
+	return (this->_serv);
+}
+
+void	 				Client::setServ(std::string& host){
+	this->_serv = host;
 }

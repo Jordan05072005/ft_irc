@@ -22,6 +22,7 @@ class Client
 		std::string _ident;
 		std::string _realname;
 		std::string	_host;
+		std::string	_serv;
 
 		/*
 			!!!!!!!!
@@ -55,6 +56,8 @@ class Client
 		void 					setRealName(std::string& name);
 		std::string const&		getHost(void) const;
 		void	 				setHost(std::string& host);
+		std::string const&		getServ(void) const;
+		void	 				setServ(std::string& host);
 
 		std::vector<Channel*>&	getChannels(void);
 		void					addChannel(Channel* channel);
