@@ -31,7 +31,6 @@ class Channel
 		std::vector<Client*>	_operators;
 		std::vector<t_invite>	_invite;
 
-		// TODO : attribut/fonction pour Invite-only
 		std::string				_channel_key;
 		int						_user_limit;
 	
@@ -50,31 +49,33 @@ class Channel
 		~Channel(void); // canonical
 
 
+		std::string	const				getCreationTime(void) const;
 		std::string const&				getName(void) const;
 		//void							setName(Client const& by, std::string const& name); //? besoin/possibilité de rename
 
 		t_topic const&					getTopic(void) const;
-		void							setTopic(const std::string& topic, const std::string &nick);
+		void							setTopic(const std::string& topic, const std::string& nick);
 		
 		std::string const&				getChannelKey(void) const;
-		//void							setChannelKey(Client const& by, std::string const& channel_key);
+		void							setChannelKey(std::string const& channel_key);
 		
-		//int const						getUserLimit(void) const;
-		//void							setUserLimit(Client const& by, int nb);
+		int								getUserLimit(void) const;
+		void							setUserLimit(int nb);
 		
 		bool							getOptInviteOnly(void) const;
-		//void							setOptInviteOnly(Client const& by, bool opt);
+		void							setOptInviteOnly(bool opt);
 		
 		bool							getOptRestrictTopic(void) const;
-		//void							setOptRestrictTopic(Client const& by, bool opt);
+		void							setOptRestrictTopic(bool opt);
 		
 		bool							getOptChannelKey(void) const;
-		//void							setOptChannelKey(Client const& by, bool opt);
+		void							setOptChannelKey(bool opt);
 
-		//bool const					getOptUserLimit(void) const;
-		//void							setOptUserLimit(Client const& by, bool opt);
+		bool							getOptUserLimit(void) const;
+		void							setOptUserLimit(bool opt);
 
 		std::vector<Client*> const&		getUsers(void) const;
+		std::string						getUsersCount(void) const;
 		std::vector<Client*> const&		getOperators(void) const;
 		const std::vector<t_invite>&	getInvite(void) const;
 
@@ -83,14 +84,16 @@ class Channel
 		void							addOperator(Client& user);
 		void							addInvite(Client& client);
 
-		void							removeUser(const std::string& nick);
+		void							removeUser(std::string const& nick);
 		void							removeInvite(void);
+		void							removeOperator(std::string const& nick);
 
-		int								checkUser(const std::string& nick);
-		int								checkOperator(const std::string& nick);
-		int								checkInvite(const std::string& nick);
+		int								checkUser(const std::string& nick) const;
+		int								checkOperator(const std::string& nick) const;
+		int								checkInvite(const std::string& nick) const;
 
-		std::string						createStringUsers(void);
+		std::string						createStringUsers(void) const;
+		std::string						createStringModes(void) const;
 };
 
 #endif

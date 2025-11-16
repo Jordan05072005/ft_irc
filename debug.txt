@@ -1,8 +1,0 @@
-JOIN:
-	JOIN #channel,#channel2
-	:irc 461 jo #channel: Not enough parameters
-	:jo!~e@127.0.0.1 JOIN #channel2: #channel2
-	:irc 331 jo #channel2: No topic is set
-	:irc 353 jo = #channel2: @jo
-	:irc 366 jo #channel2: End of /NAMES list
-

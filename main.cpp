@@ -14,7 +14,8 @@
 
 int	parsing(std::string port, std::string password)
 {
-	for (int i = 0; i < port.length(); ++i)
+	(void)password;
+	for (size_t i = 0; i < port.length(); ++i)
 	{
 		if (std::isdigit(port[i]) == false)
 			return (1);
@@ -52,8 +53,8 @@ int main(int ac, char **av)
 
 	try
 	{
-		Server::getInstance().init(std::atoi(av[1]), password);
 		Server& serv = Server::getInstance();
+		serv.init(std::atoi(av[1]), password);
 	}
 	catch (std::exception& e)
 	{

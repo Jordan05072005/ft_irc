@@ -1,6 +1,7 @@
 # ignore les fichiers de compilation
 *.o
 *.exe
+ircserv
 
 # ignore configuration vscode partout
 .vscode/
