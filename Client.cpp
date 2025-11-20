@@ -9,6 +9,7 @@ Client::Client(int fd, sockaddr_in addr, socklen_t len) : _fd(fd), _addr(addr), 
 	inet_ntop(AF_INET, &(addr.sin_addr), ip_str, INET_ADDRSTRLEN);
 	this->_host = ip_str;
 	this->_serv = "irc.42.fr";
+	this->_buff = "";
 }
 
 Client::Client(const Client& cpy) : _state(1)
@@ -60,10 +61,14 @@ std::string const& Client::getBuf(void) const
 	return (this->_buff);
 }
 
-void Client::setBuf(char *buf, int oct)
+void Client::resetBuf()
 {
-	if (oct > 0)
-		this->_buff.assign(buf, oct); 
+		this->_buff = "";
+}
+
+void	Client::addBuf(char *buf, int len)
+{
+	this->_buff.append(buf, len);
 }
 
 
@@ -148,6 +153,15 @@ void	Client::removeAllChannels(void)
 	this->_channel.clear();
 	return ;
 }
+
+int	Client::inChannel(const std::string &name){
+	for (size_t i = 0; i < this->_channel.size(); i++){
+		if (this->_channel[i]->getName() == name)
+			return (1);
+	}
+	return (0);
+}
+
 
 
 /*-----------------------------------------------------------------------------------------------*/

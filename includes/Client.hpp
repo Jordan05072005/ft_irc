@@ -46,7 +46,8 @@ class Client
 		void					setFd(int fd);
 
 		std::string const&		getBuf(void) const;
-		void 					setBuf(char *buf, int oct);
+		void 					resetBuf();
+		void 					addBuf(char *buf, int len);
 
 		std::string const&		getNick(void) const;
 		void 					setNick(std::string& nick);
@@ -63,6 +64,7 @@ class Client
 		void					addChannel(Channel* channel);
 		void					removeChannel(std::string const& name);
 		void					removeAllChannels(void);
+		int						inChannel(const std::string &name);
 
 		int 					getState(void) const;
 		void 					setState(int e);

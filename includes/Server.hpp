@@ -57,16 +57,15 @@ class Server
 
 
 
-		int		checkUniqueNick(std::string& nick);
-		int		checkExistClient(std::string& nick);
-		int		checkExistChannel(std::string& name);
+		int		checkUniqueNick(const std::string& nick);
+		int		checkExistClient(const std::string& nick);
+		int		checkExistChannel(const std::string& name);
 
 		int		errorState(int state, std::string const& cmd, Client& client);
-		void	sendMessLocal(std::string const& err, std::string const& cmd, Client const& client, std::string const& body);
-		void	sendMessUser(Client const& s, Client const& r, std::string const& cmd, std::string const& body);
+		void	sendMessLocal(std::string const& err, std::string const& cmd, Client& client, std::string const& body);
+		void	sendMessUser(Client const& s, Client& r, std::string const& cmd, std::string const& body);
 		void	sendMessGlobal(std::string const& cmd, std::string const& mess, Client const& c);
-		void	sendMessChannel(std::string const& channel, std::string const& argm, std::string const& cmd, std::string const& mess, Client const& c);
-	
+		void	sendMessChannel(std::string channel, std::string cmd, std::string argm, std::string mess, Client& c);
 		int		getIndexChannel(std::string const& name);
 		Client&	getClient(std::string const& nick);
 
