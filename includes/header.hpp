@@ -17,11 +17,14 @@
 # include <sstream>
 # include <ctime>
 # include <signal.h>
+# include <algorithm>
 
 std::vector<std::string>	split(const std::string &s, char delimiter);
 void						setup_signals(void);
 std::string					ft_tolower(std::string str);
 std::string					add_to_modestring(std::string const& str, std::string const& mode);
+std::string 				convertTimeStr(time_t t);
+
 # include "Client.hpp"
 # include "Channel.hpp"
 # include "Server.hpp"

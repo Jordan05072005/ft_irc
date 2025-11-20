@@ -24,16 +24,6 @@ class Client
 		std::string	_host;
 		std::string	_serv;
 
-		/*
-			!!!!!!!!
-
-			!std::vector<Channel*> au lieu de std::vector<Channel> dans serveur car adresses changent à chaque push_back
-			!donc création des Channel avec new
-
-			!penser a ajouter et supprimer les channels du tableau suivant les mouvements du client
-
-			!!!!!!!!
-		*/
 		std::vector<Channel*>	_channel;
 
 		int						_state; // state = 1 -> login, state = 2 -> register
@@ -46,8 +36,8 @@ class Client
 		void					setFd(int fd);
 
 		std::string const&		getBuf(void) const;
-		void 					resetBuf();
 		void 					addBuf(char *buf, int len);
+		void 					resetBuf(void);
 
 		std::string const&		getNick(void) const;
 		void 					setNick(std::string& nick);
@@ -64,7 +54,6 @@ class Client
 		void					addChannel(Channel* channel);
 		void					removeChannel(std::string const& name);
 		void					removeAllChannels(void);
-		int						inChannel(const std::string &name);
 
 		int 					getState(void) const;
 		void 					setState(int e);

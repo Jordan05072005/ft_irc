@@ -38,6 +38,8 @@ Channel::Channel(std::string const& _name, Client* creator)
 	this->_users.push_back(creator);
 	this->_operators.push_back(creator);
 
+	creator->addChannel(this);
+
 	this->_channel_key = "";
 	this->_user_limit = 0; // no limit
 
@@ -57,6 +59,8 @@ Channel::Channel(std::string const& _name, std::string const& key, Client* creat
 	this->_users.push_back(creator);
 	this->_operators.push_back(creator);
 
+	creator->addChannel(this);
+
 	this->_channel_key = key;
 	this->_user_limit = 0; // no limit
 
@@ -73,12 +77,9 @@ Channel::~Channel(void){}
 /*-----------------------------------------------------------------------------------------------*/
 
 
-std::string const	Channel::getCreationTime(void) const
+std::time_t const&	Channel::getCreationTime(void) const
 {
-	std::stringstream	ss;
-
-	ss << this->_creationtime;
-	return (ss.str());
+	return (this->_creationtime);
 }
 
 std::string const&	Channel::getName(void) const
@@ -111,12 +112,12 @@ void	Channel::setChannelKey(std::string const& channel_key)
 	return ;
 }
 
-int	Channel::getUserLimit(void) const
+size_t	Channel::getUserLimit(void) const
 {
 	return (this->_user_limit);
 }
 
-void	Channel::setUserLimit(int nb)
+void	Channel::setUserLimit(size_t nb)
 {
 	this->_user_limit = nb;
 	return ;
@@ -174,12 +175,17 @@ std::vector<Client*> const&		Channel::getUsers(void) const
 	return (this->_users);
 }
 
-std::string						Channel::getUsersCount(void) const
+std::string						Channel::getUsersCountStr(void) const
 {
 	std::stringstream	ss;
 
 	ss << this->_users.size();
 	return (ss.str());
+}
+
+size_t							Channel::getUsersCountNb(void) const
+{
+	return (this->_users.size());
 }
 
 std::vector<Client*> const&		Channel::getOperators(void) const
@@ -231,7 +237,6 @@ void	Channel::removeUser(std::string const& nick)
 			this->_users.erase(this->_users.begin() + i);
 	}
 	this->removeOperator(nick);
-	// TODO : add message de sortie de channel + auto retirer ?
 	return ;
 }
 
@@ -242,7 +247,6 @@ void	Channel::removeOperator(std::string const& nick)
 		if (this->_operators[i]->getNick() == nick)
 			this->_operators.erase(this->_operators.begin() + i);
 	}
-	// TODO : voir si besoin message retirer droits operateur + auto retirer ?
 	return ;
 }
 
@@ -323,24 +327,26 @@ std::string	Channel::createStringModes(void) const
 		return (str);
 	
 	if (this->_i == true)
-		add_to_modestring(modes[0], "+i");
+		modes[0] = add_to_modestring(modes[0], "+i");
 	if (this->_t == true)
-		add_to_modestring(modes[0], "+t");
+		modes[0] = add_to_modestring(modes[0], "+t");
 	if (this->_k == true)
 	{
 		modes.push_back(this->_channel_key);
-		add_to_modestring(modes[0], "+k");
+		modes[0] = add_to_modestring(modes[0], "+k");
 	}
 	if (this->_l == true)
 	{
 		std::string tmp;
-		std::sprintf(&tmp[0], "%d", this->_user_limit);
+		std::sprintf(&tmp[0], "%ld", this->_user_limit);
 		modes.push_back(tmp);
-		add_to_modestring(modes[0], "+l");
+		modes[0] = add_to_modestring(modes[0], "+l");
 	}
 
 	for (std::vector<std::string>::iterator it = modes.begin(); it != modes.end(); ++it)
 	{
+		if (it != modes.begin())
+			str += ' ';
 		str += *it;
 	}
 	return (str);

@@ -61,14 +61,14 @@ std::string const& Client::getBuf(void) const
 	return (this->_buff);
 }
 
-void Client::resetBuf()
+void Client::addBuf(char *buf, int len)
 {
-		this->_buff = "";
+	this->_buff.assign(buf, len); 
 }
 
-void	Client::addBuf(char *buf, int len)
+void Client::resetBuf(void)
 {
-	this->_buff.append(buf, len);
+	this->_buff = "";
 }
 
 
@@ -145,23 +145,9 @@ void	Client::removeChannel(std::string const& name)
 
 void	Client::removeAllChannels(void)
 {
-	for (size_t i = 0; i < this->_channel.size(); ++i)
-	{
-		this->_channel[i]->removeUser(this->_nick);
-		// TODO : add message de sortie de channel
-	}
 	this->_channel.clear();
 	return ;
 }
-
-int	Client::inChannel(const std::string &name){
-	for (size_t i = 0; i < this->_channel.size(); i++){
-		if (this->_channel[i]->getName() == name)
-			return (1);
-	}
-	return (0);
-}
-
 
 
 /*-----------------------------------------------------------------------------------------------*/
@@ -178,10 +164,12 @@ void Client::setState(int e)
 }
 
 
-std::string const&		Client::getServ(void) const{
+std::string const&	Client::getServ(void) const
+{
 	return (this->_serv);
 }
 
-void	 				Client::setServ(std::string& host){
+void	Client::setServ(std::string& host)
+{
 	this->_serv = host;
 }

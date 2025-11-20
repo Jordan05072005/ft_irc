@@ -43,3 +43,11 @@ std::string	add_to_modestring(std::string const& str, std::string const& mode)
 		return (str.substr(0, i) + mode[1] + str.substr(i));
 	return (str + mode);
 }
+
+std::string convertTimeStr(time_t t)
+{
+	std::stringstream ss;
+
+	ss << t;
+	return (ss.str());
+}

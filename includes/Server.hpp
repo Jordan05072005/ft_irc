@@ -33,51 +33,52 @@ class Server
 		std::vector<t_cmd>		_cmd;
 		std::vector<Channel*>	_channel;
 
-		void	initServ(void);
-		void	bindAndListen(sockaddr_in const& addr);
-		void	run(void);
-		int		requestHandler(Client& client);
+		void		initServ(void);
+		void		bindAndListen(sockaddr_in const& addr);
+		void		run(void);
+		int			requestHandler(Client& client);
 	
-		int		checkCap(Client& client, std::vector<std::string>& mess);
-		int		checkPass(Client& client, std::vector<std::string>& mess);
-		int		checkNick(Client& client, std::vector<std::string>& mess);
-		int		checkUser(Client& client, std::vector<std::string>& mess);
-		int		checkQuit(Client& client, std::vector<std::string>& mess);
-		int		checkKick(Client& client, std::vector<std::string>& mess);
-		int		checkInvite(Client& client, std::vector<std::string>& mess);
-		int		checkTopic(Client& client, std::vector<std::string>& mess);
-		int		checkJoin(Client& client, std::vector<std::string>& mess);
-		int		checkMode(Client& client, std::vector<std::string>& mess);
-		int		checkPart(Client& client, std::vector<std::string>& mess);
-		int		checkNotice(Client& client, std::vector<std::string>& mess);
-		int		checkList(Client& client, std::vector<std::string>& mess);
-		int		checkPrivmsg(Client& client, std::vector<std::string>& mess);
-		int		checkNames(Client& client, std::vector<std::string>& mess);
-		int		checkWho(Client& client, std::vector<std::string>& mess);
+		int			checkCap(Client& client, std::vector<std::string>& mess);
+		int			checkPass(Client& client, std::vector<std::string>& mess);
+		int			checkNick(Client& client, std::vector<std::string>& mess);
+		int			checkUser(Client& client, std::vector<std::string>& mess);
+		int			checkQuit(Client& client, std::vector<std::string>& mess);
+		int			checkKick(Client& client, std::vector<std::string>& mess);
+		int			checkInvite(Client& client, std::vector<std::string>& mess);
+		int			checkTopic(Client& client, std::vector<std::string>& mess);
+		int			checkJoin(Client& client, std::vector<std::string>& mess);
+		int			checkMode(Client& client, std::vector<std::string>& mess);
+		int			checkPart(Client& client, std::vector<std::string>& mess);
+		int			checkNotice(Client& client, std::vector<std::string>& mess);
+		int			checkList(Client& client, std::vector<std::string>& mess);
+		int			checkPrivmsg(Client& client, std::vector<std::string>& mess);
+		int			checkNames(Client& client, std::vector<std::string>& mess);
+		int			checkWho(Client& client, std::vector<std::string>& mess);
 
+		int			checkUniqueNick(std::string const& nick);
+		int			checkExistClient(std::string const& nick);
+		int			checkExistChannel(std::string const& name);
 
+		int			errorState(int state, std::string const& cmd, Client& client);
+		void		sendMessLocal(std::string const& err, std::string const& cmd, Client const& client, std::string const& body);
+		void		sendMessUser(Client const& s, Client const& r, std::string const& cmd, std::string const& body);
+		void		sendMessGlobal(std::string const& cmd, std::string const& mess, Client const& c);
+		void		sendMessChannel(std::string const& channel, std::string const& cmd, std::string const& argm, std::string const& mess, Client const& c);
+	
+		int			getIndexChannel(std::string const& name);
+		Client&		getClient(std::string const& nick);
 
-		int		checkUniqueNick(const std::string& nick);
-		int		checkExistClient(const std::string& nick);
-		int		checkExistChannel(const std::string& name);
+		void		delClient(int index);
+		void		delInvite(void);
+		void		delAllChannelClient(Client& client, std::string& cmd, std::string mess);
 
-		int		errorState(int state, std::string const& cmd, Client& client);
-		void	sendMessLocal(std::string const& err, std::string const& cmd, Client& client, std::string const& body);
-		void	sendMessUser(Client const& s, Client& r, std::string const& cmd, std::string const& body);
-		void	sendMessGlobal(std::string const& cmd, std::string const& mess, Client const& c);
-		void	sendMessChannel(std::string channel, std::string cmd, std::string argm, std::string mess, Client& c);
-		int		getIndexChannel(std::string const& name);
-		Client&	getClient(std::string const& nick);
-
-		void	delClient(int index);
-		void	delInvite(void);
-		void	delAllChannelClient(Client& client, std::string& cmd, std::string mess);
+		std::string	createStringChannels(void) const;
 		
 	public :
 		void 			init(int port, std::string const& password);
 		static Server&	getInstance(void);
-		void			closeAll();
-		void			close_serv();
+		void			closeAll(void);
+		void			close_serv(void);
 		~Server(void); // canonical
 
 };

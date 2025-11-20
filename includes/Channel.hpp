@@ -32,7 +32,7 @@ class Channel
 		std::vector<t_invite>	_invite;
 
 		std::string				_channel_key;
-		int						_user_limit;
+		size_t					_user_limit;
 	
 		bool					_i; // Set/Remove Invite-only channel
 		bool					_t; // Set/Remove restrict TOPIC to only operator
@@ -49,7 +49,7 @@ class Channel
 		~Channel(void); // canonical
 
 
-		std::string	const				getCreationTime(void) const;
+		std::time_t const&				getCreationTime(void) const;
 		std::string const&				getName(void) const;
 		//void							setName(Client const& by, std::string const& name); //? besoin/possibilité de rename
 
@@ -59,8 +59,8 @@ class Channel
 		std::string const&				getChannelKey(void) const;
 		void							setChannelKey(std::string const& channel_key);
 		
-		int								getUserLimit(void) const;
-		void							setUserLimit(int nb);
+		size_t							getUserLimit(void) const;
+		void							setUserLimit(size_t nb);
 		
 		bool							getOptInviteOnly(void) const;
 		void							setOptInviteOnly(bool opt);
@@ -75,7 +75,8 @@ class Channel
 		void							setOptUserLimit(bool opt);
 
 		std::vector<Client*> const&		getUsers(void) const;
-		std::string						getUsersCount(void) const;
+		std::string						getUsersCountStr(void) const;
+		size_t							getUsersCountNb(void) const;
 		std::vector<Client*> const&		getOperators(void) const;
 		const std::vector<t_invite>&	getInvite(void) const;
 
