@@ -15,6 +15,39 @@ std::vector<std::string> split(const std::string &s, char delimiter)
     return (tokens);
 }
 
+std::vector<std::string> split2(const std::string &s, const std::string &delims)
+{
+		std::vector<std::string> tokens;
+		size_t start = 0;
+		size_t end = 0;
+
+		while (start < s.length())
+		{
+				// Skip delimiters
+				while (start < s.length() && delims.find(s[start]) != std::string::npos)
+						start++;
+
+				if (start >= s.length())
+						break;
+
+				// Find next delimiter
+				end = start;
+				while (end < s.length() && delims.find(s[end]) == std::string::npos)
+						end++;
+
+				// Extract token
+				std::string token = s.substr(start, end - start);
+
+				// Trim trailing \r\n
+				token.erase(token.find_last_not_of("\r\n") + 1);
+
+				tokens.push_back(token);
+				start = end;
+		}
+
+		return tokens;
+}
+
 std::string	ft_tolower(std::string str)
 {
 	for (size_t i = 0; i < str.size(); i++)

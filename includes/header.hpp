@@ -20,6 +20,7 @@
 # include <algorithm>
 
 std::vector<std::string>	split(const std::string &s, char delimiter);
+std::vector<std::string> split2(const std::string &s, const std::string &delims);
 void						setup_signals(void);
 std::string					ft_tolower(std::string str);
 std::string					add_to_modestring(std::string const& str, std::string const& mode);

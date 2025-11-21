@@ -210,7 +210,7 @@ void	Channel::addUser(Client& user)
 
 void	Channel::addOperator(Client& user)
 {
-	this->_users.push_back(&user);
+	this->_operators.push_back(&user);
 	return ;
 }
 
@@ -244,8 +244,9 @@ void	Channel::removeOperator(std::string const& nick)
 {
 	for (size_t i = 0; i < this->_operators.size(); i++)
 	{
-		if (this->_operators[i]->getNick() == nick)
+		if (this->_operators[i]->getNick() == nick){
 			this->_operators.erase(this->_operators.begin() + i);
+		}
 	}
 	return ;
 }
@@ -257,6 +258,14 @@ void	Channel::removeInvite(void)
 	{
 		if (now - this->_invite[i].time >= 600)
 			this->_invite.erase(this->_invite.begin() + i);
+	}
+}
+
+void Channel::delInvite(Client &c){
+	for (size_t i = 0; i < this->_invite.size(); i++){
+		if (this->_invite[i].client->getNick() == c.getNick()){
+			this->_invite.erase(this->_invite.begin() + i);
+		}
 	}
 }
 
@@ -278,7 +287,7 @@ int Channel::checkOperator(const std::string& nick) const
 {
 	for (size_t i = 0; i < this->_operators.size(); i++)
 	{
-		if (this->_users[i]->getNick() == nick)
+		if (this->_operators[i]->getNick() == nick)
 			return (1);
 	}
 	return (0);
