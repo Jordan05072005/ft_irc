@@ -1,4 +1,4 @@
-#include "includes/header.hpp"
+#include "../includes/header.hpp"
 
 
 Client::Client(void){}
@@ -10,6 +10,8 @@ Client::Client(int fd, sockaddr_in addr, socklen_t len) : _fd(fd), _addr(addr), 
 	this->_host = ip_str;
 	this->_serv = "irc.42.fr";
 	this->_buff = "";
+	this->_mute.warn = 0;
+	this->_mute.mute = false;
 }
 
 Client::Client(const Client& cpy) : _state(1)
@@ -31,6 +33,7 @@ Client& Client::operator=(const Client& cpy)
 		this->_realname = cpy._realname;
 		this->_ident = cpy._ident;
 		this->_serv = cpy._serv;
+		this->_mute = cpy._mute;
 	}
 	// cpy.setFd(-1);
 	return (*this);
@@ -63,7 +66,7 @@ std::string const& Client::getBuf(void) const
 
 void Client::addBuf(char *buf, int len)
 {
-	this->_buff.assign(buf, len); 
+	this->_buff.append(buf, len); 
 }
 
 void Client::resetBuf(void)
@@ -172,4 +175,32 @@ std::string const&	Client::getServ(void) const
 void	Client::setServ(std::string& host)
 {
 	this->_serv = host;
+}
+
+
+int	Client::getWarn(void) const{
+	return (_mute.warn);
+}
+
+void	Client::addWarn(void){
+		this->_mute.warn++;
+		if (this->_mute.warn >= 3){
+			this->_mute.mute = true;
+			this->_mute.end = std::time(NULL) + 5 * 60;
+		}
+}
+
+void	Client::resetWarn(void){
+		this->_mute.warn = 0;
+}
+
+bool	Client::isMute(){
+	if (this->_mute.mute){
+		std::time_t now = std::time(NULL);
+		if (now < this->_mute.end)
+			return (1);
+		this->_mute.mute = false;
+		this->resetWarn();
+	}
+	return (0);
 }

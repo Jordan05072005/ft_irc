@@ -1,4 +1,4 @@
-SRC= main.cpp Server.cpp Client.cpp utils.cpp Channel.cpp signal.cpp
+SRC= srcs/main.cpp srcs/Server.cpp srcs/Client.cpp srcs/utils.cpp srcs/Channel.cpp srcs/signal.cpp srcs/Bot.cpp
 
 OBJ =${SRC:.c=.o}
 

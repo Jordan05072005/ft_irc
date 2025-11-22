@@ -1,4 +1,4 @@
-#include "includes/header.hpp"
+#include "../includes/header.hpp"
 
 Channel::Channel(void){}
 
@@ -95,7 +95,7 @@ const t_topic& Channel::getTopic(void) const
 void 	Channel::setTopic(const std::string& topic, const std::string& nick)
 {
 	std::time_t now = std::time(NULL);
-	
+		
 	this->_topic.topic = topic;
 	this->_topic.time = now;
 	this->_topic.modifBy = nick;

@@ -35,4 +35,10 @@ pool:
 	et donc on met dans event se que on veut detecter, puis pool remplie dans revents, l'event qui se passe.
 
 
-/query pour ouvrir un prv
+Hexchat commande: 
+	/query pour ouvrir un prv
+
+
+Correction:
+	Ctrl z -> stopped progra
+	fg %{occurence} -> recup le programme

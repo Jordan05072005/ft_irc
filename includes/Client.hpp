@@ -5,6 +5,12 @@
 
 class Channel;
 
+typedef struct s_mute{
+	int warn;
+	bool mute;
+	std::time_t end;
+} t_mute;
+
 class Client
 {
 	private :
@@ -25,12 +31,13 @@ class Client
 		std::string	_serv;
 
 		std::vector<Channel*>	_channel;
+		t_mute		_mute;
 
 		int						_state; // state = 1 -> login, state = 2 -> register
 
 	public :
 		Client(int fd, sockaddr_in addr, socklen_t len); // canonical
-		~Client(void); // canonical
+		virtual ~Client(void); // canonical
 
 		int						getFd(void) const;
 		void					setFd(int fd);
@@ -57,6 +64,14 @@ class Client
 
 		int 					getState(void) const;
 		void 					setState(int e);
+		int 					getWarn(void) const;
+		void 					addWarn(void);
+		void 					resetWarn(void);
+		bool					isMute();
+
+
+
+
 };
 
 #endif

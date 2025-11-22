@@ -6,11 +6,11 @@
 /*   By: jguaglio <guaglio.jordan@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/21 13:48:33 by jguaglio          #+#    #+#             */
-/*   Updated: 2025/11/21 15:08:16 by jguaglio         ###   ########.fr       */
+/*   Updated: 2025/11/22 23:19:53 by jguaglio         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "includes/header.hpp"
+#include "../includes/header.hpp"
 
 Server::Server(void){}
 
@@ -51,7 +51,7 @@ void	Server::init(int port, std::string const& password)
 
 		// available commands when registered
 		this->_cmd.push_back(init_cmd("KICK", &Server::checkKick, 2));
-		this->_cmd.push_back(init_cmd("INVITE", &Server::checkInvite, 2));	
+		this->_cmd.push_back(init_cmd("INVITE", &Server::checkInvite, 2));
 		this->_cmd.push_back(init_cmd("TOPIC", &Server::checkTopic, 2));
 		this->_cmd.push_back(init_cmd("JOIN", &Server::checkJoin, 2));
 		this->_cmd.push_back(init_cmd("MODE", &Server::checkMode, 2));
@@ -80,6 +80,7 @@ void Server::closeAll(void)
 {
 	std::string message;
 	size_t size = this->_clients.size();
+	delete this->_bot[0];
 	for (size_t i = 0; i < size; i++)
 	{
 		std::string message = "ERROR :Closing Link: " + this->_clients[0]->getNick() + " (Server shutting down)\r\n";
@@ -153,10 +154,11 @@ void Server::run(void)
 	char 				buf[512];
 	int 				oct; // nombre d'octets lus renvoyés par recv
 
+	this->_bot.push_back(new Bot("bot42", "bot42", "bot42"));
 	while (!this->_close)
 	{
 		setup_signals();
-		err = poll(this->_fds.data(), this->_fds.size(), POOL_TIME); // poll(pointeur sur tableau, taille tableau, timeout)
+		err = poll(this->_fds.data(), this->_fds.size(), -1); // poll(pointeur sur tableau, taille tableau, timeout)
 		if (err < 0 && !this->_close)
 			throw std::runtime_error("Error: poll");
 		this->delInvite();
@@ -188,7 +190,7 @@ void Server::run(void)
 				}
 				this->_clients[i - 1]->addBuf(buf, oct);
 				// this->_clients[i - 1]->getBuf().find("\r\n") != std::string::npos && 
-				if (this->requestHandler(*(this->_clients[i - 1])))
+				if (this->_clients[i - 1]->getBuf().find("\n") != std::string::npos && this->requestHandler(*(this->_clients[i - 1])))
 				{
 					this->delClient(i--);
 					continue;
@@ -208,6 +210,8 @@ int Server::requestHandler(Client& client)
 {
 	int err;
 	std::vector<std::string> cmd = split2(client.getBuf(), "\r\n");
+	if (cmd.empty())
+		return (0);
 	client.resetBuf();
 	for (size_t j = 0; j < cmd.size(); j++){
 		std::vector<std::string> mess = split2(cmd[j], " \t");
@@ -241,6 +245,8 @@ int	Server::checkCap(Client& client, std::vector<std::string>& mess)
 {
 	std::string message;
 
+	if (mess.size() == 1)
+		return 0;
 	if (mess[1] == "LS"){
 		message = ":irc CAP * LS :\r\n";
 		send(client.getFd(), message.c_str(), message.size(), 0);
@@ -260,6 +266,8 @@ int Server::checkPass(Client& client, std::vector<std::string>& mess)
 {
 	std::string err;
 
+	if (mess.size() == 1)
+		return (this->sendMessLocal("461", mess[0], client, "Not enough parameters"), 0);
 	if (client.getState() >= 1)
 		return (this->sendMessLocal("462", "", client, "Unauthorized command (already registered)"), 0);
 	if (mess[1] != this->_password)
@@ -700,7 +708,6 @@ int		Server::checkMode(Client& client, std::vector<std::string>& mess)
 			{
 				if (!channel->checkUser(itm->second))
 					return (this->sendMessLocal("441", itm->second + " " + mess[1], client, "They aren't on that channel"), 0);
-				std::cout << "here : " << itm->second << std::endl;
 				channel->removeOperator(itm->second);
 			}
 			else
@@ -901,10 +908,16 @@ int		Server::checkPrivmsg(Client& client, std::vector<std::string>& mess)
 		return (this->sendMessLocal("461", mess[0], client, "Not enough parameters"), 0);
 	if (mess.size() < 3 || mess[2][0] != ':' || mess[2].size() == 1)
 		return (this->sendMessLocal("412", "", client, "No text to send"), 0);
+	if (client.isMute())
+			return (sendMessBot(*this->_bot[0], client, "NOTICE", this->_bot[0]->getMessMute()), 0);
 	argm = split(mess[1], ',');
 	mess[2].erase(0, 1);
 	for (size_t i = 2; i < mess.size(); i++)
 		message = message + (mess[i] + ((i + 1) == mess.size() ? "" : " "));
+	if (this->_bot[0]->checkMessage(message)){
+		client.addWarn();
+		return (sendMessBot(*this->_bot[0], client, "NOTICE", this->_bot[0]->getMessBadWords()), 0);
+	}
 	for (size_t i = 0; i < argm.size(); i++)
 	{
 		if (argm[i][0] != '#')
@@ -1116,12 +1129,22 @@ void Server::sendMessLocal(std::string const& err, std::string const& cmd, Clien
 	send(c.getFd(), err_mess.c_str(), err_mess.size(), 0);
 }
 
+void Server::sendMessBot(Bot& b, Client const& c, std::string cmd, const std::string& mess){
+	std::string err_mess;
+	std::stringstream ss;
+
+	ss << ":" << b.getNick() << "!"<< b.getIdent() <<"@:irc.42.fr " << cmd << " " << c.getNick() << (mess.empty() ? "" : (" :" + mess)) << "\r\n";
+	err_mess = ss.str();
+	send(c.getFd(), err_mess.c_str(), err_mess.size(), 0);
+}
+
 //:Jo!~jo@127.0.0.1 PRIVMSG Max :Salut Max, ça va ?
-void	Server::sendMessUser(Client const& s, Client const& r, std::string const& cmd, std::string const& body)
+void	Server::sendMessUser(Client& s, Client const& r, std::string const& cmd, std::string const& body)
 {
 	std::string err_mess;
 	std::string nick;
 	std::stringstream ss;
+
 
 	nick = s.getNick();
 	if (nick.empty())
@@ -1145,12 +1168,13 @@ void Server::sendMessGlobal(std::string const& cmd, std::string const& mess, Cli
 
 // TODO: enlever argument
 // Alice JOIN :#général
-void Server::sendMessChannel(std::string const& channel, std::string const& argm, std::string const& mess,int sendme , Client const& c)
+void Server::sendMessChannel(std::string const& channel, std::string const& argm, std::string const& mess, int sendme , Client& c)
 {
 	std::stringstream ss;
 	std::string message;
 	int i;
 	std::vector<Client*> t;
+
 
 	ss << ":" << (c.getNick().empty() ? "*" : c.getNick()) << "!~" << (c.getIdent().empty() ? "*" : c.getIdent()) << "@" << c.getHost() << (argm.empty() ? "" : (" " + argm))<< (mess.empty() ? "" : (" :" + mess)) << "\r\n";
 	message = ss.str();
@@ -1217,6 +1241,8 @@ void Server::delInvite(void)
 	}
 	return ;
 }
+
+
 
 //:Alice!alice@host PART #general :Bye everyone!
 void	Server::delAllChannelClient(Client& client, std::string& cmd, std::string mess)
