@@ -55,6 +55,11 @@ class Server
 		int			checkPrivmsg(Client& client, std::vector<std::string>& mess);
 		int			checkNames(Client& client, std::vector<std::string>& mess);
 		int			checkWho(Client& client, std::vector<std::string>& mess);
+		int			checkHelp(Client& client, std::vector<std::string>& mess);
+		int			checkPing(Client& client, std::vector<std::string>& mess);
+		int			checkRules(Client& client, std::vector<std::string>& mess);
+		int			checkStats(Client& client, std::vector<std::string>& mess);
+		int			checkNote(Client& client, std::vector<std::string>& mess);
 
 		int			checkUniqueNick(std::string const& nick);
 		int			checkExistClient(std::string const& nick);
