@@ -1,2 +1,2 @@
 # ft_irc
-Create a serveur Irc
+Create a server Irc

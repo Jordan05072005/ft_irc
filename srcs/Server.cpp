@@ -39,7 +39,7 @@ void	Server::init(int port, std::string const& password)
 
 		// available commands when registered
 		this->_cmd.push_back(init_cmd("KICK", &Server::checkKick, 2));
-		this->_cmd.push_back(init_cmd("INVITE", &Server::checkInvite, 2));
+		this->_cmd.push_back(init_cmd("INVITE", &Server::checkInvite, 2));	
 		this->_cmd.push_back(init_cmd("TOPIC", &Server::checkTopic, 2));
 		this->_cmd.push_back(init_cmd("JOIN", &Server::checkJoin, 2));
 		this->_cmd.push_back(init_cmd("MODE", &Server::checkMode, 2));
@@ -48,6 +48,7 @@ void	Server::init(int port, std::string const& password)
 		this->_cmd.push_back(init_cmd("LIST", &Server::checkList, 2));
 		this->_cmd.push_back(init_cmd("PRIVMSG", &Server::checkPrivmsg, 2));
 		this->_cmd.push_back(init_cmd("NAMES", &Server::checkNames, 2));
+		this->_cmd.push_back(init_cmd("WHO", &Server::checkWho, 2));
 		this->_cmd.push_back(init_cmd("!help", &Server::checkHelp, 2));
 		this->_cmd.push_back(init_cmd("!ping", &Server::checkPing, 2));
 		this->_cmd.push_back(init_cmd("!rules", &Server::checkRules, 2));
@@ -205,7 +206,8 @@ int Server::requestHandler(Client& client)
 	if (cmd.empty())
 		return (0);
 	client.resetBuf();
-	for (size_t j = 0; j < cmd.size(); j++){
+	for (size_t j = 0; j < cmd.size(); j++)
+	{
 		std::vector<std::string> mess = split2(cmd[j], " \t");
 		err = -1;
 		if (mess.size() <= 0)
@@ -215,7 +217,8 @@ int Server::requestHandler(Client& client)
 		{
 			if (mess[0] == this->_cmd[i].name)
 			{
-				if (this->_cmd[i].state > client.getState()){
+				if (this->_cmd[i].state > client.getState())
+				{
 					if ((err = this->errorState(client.getState(), mess[0], client)))
 						return (1);
 				}
@@ -226,5 +229,5 @@ int Server::requestHandler(Client& client)
 		if (err == -1)
 			return (this->sendMessLocal("462", mess[0], client, "Unknown command"), 0);
 	}
-	return 0;
+	return (0);
 }

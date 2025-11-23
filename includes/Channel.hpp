@@ -89,12 +89,11 @@ class Channel
 		void							removeInvite(void);
 		void							removeOperator(std::string const& nick);
 
+		void							delInvite(Client& client);
+
 		int								checkUser(const std::string& nick) const;
 		int								checkOperator(const std::string& nick) const;
 		int								checkInvite(const std::string& nick) const;
-
-		void							delInvite(Client& client);
-	
 
 		std::string						createStringUsers(void) const;
 		std::string						createStringModes(void) const;

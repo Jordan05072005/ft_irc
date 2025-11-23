@@ -1,7 +1,15 @@
-SRC= srcs/main.cpp srcs/Server.cpp srcs/Client.cpp srcs/utils.cpp srcs/Channel.cpp srcs/signal.cpp srcs/Bot.cpp \
-	srcs/ServerCmd.cpp srcs/ServerMess.cpp srcs/ServerUtils.cpp
+SRC = srcs/main.cpp \
+		srcs/Bot.cpp \
+		srcs/Channel.cpp \
+		srcs/Client.cpp \
+		srcs/Server.cpp \
+		srcs/ServerCmd.cpp \
+		srcs/ServerMess.cpp \
+		srcs/ServerUtils.cpp \
+		srcs/signal.cpp \
+		srcs/utils.cpp
 
-OBJ =${SRC:.c=.o}
+OBJ = ${SRC:.c=.o}
 
 CFLAGS = -Wall -Werror -Wextra -g -std=c++98
 

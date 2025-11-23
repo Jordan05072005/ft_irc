@@ -8,11 +8,18 @@ std::vector<std::string> split(const std::string &s, char delimiter)
 
     while (std::getline(ss, item, delimiter))
 	{
-			item.erase(item.find_last_not_of("\r\n") + 1);
-			tokens.push_back(item);
+		item.erase(item.find_last_not_of("\r\n") + 1);
+		tokens.push_back(item);
     }
 
     return (tokens);
+}
+
+std::string	ft_tolower(std::string str)
+{
+	for (size_t i = 0; i < str.size(); i++)
+		str[i] = std::tolower(str[i]);
+	return (str);
 }
 
 std::vector<std::string> split2(const std::string &s, const std::string &delims)
@@ -23,38 +30,29 @@ std::vector<std::string> split2(const std::string &s, const std::string &delims)
 
 		while (start < s.length())
 		{
-				// Skip delimiters
-				while (start < s.length() && delims.find(s[start]) != std::string::npos)
-						start++;
+			// Skip delimiters
+			while (start < s.length() && delims.find(s[start]) != std::string::npos)
+				start++;
 
-				if (start >= s.length())
-						break;
+			if (start >= s.length())
+				break;
 
-				// Find next delimiter
-				end = start;
-				while (end < s.length() && delims.find(s[end]) == std::string::npos)
-						end++;
+			// Find next delimiter
+			end = start;
+			while (end < s.length() && delims.find(s[end]) == std::string::npos)
+				end++;
 
-				// Extract token
-				std::string token = s.substr(start, end - start);
+			// Extract token
+			std::string token = s.substr(start, end - start);
 
-				// Trim trailing \r\n
-				token.erase(token.find_last_not_of("\r\n") + 1);
+			// Trim trailing \r\n
+			token.erase(token.find_last_not_of("\r\n") + 1);
 
-				tokens.push_back(token);
-				start = end;
+			tokens.push_back(token);
+			start = end;
 		}
 
 		return tokens;
-}
-
-std::string	ft_tolower(std::string str)
-{
-	for (size_t i = 0; i < str.size(); i++)
-	{
-		str[i] = std::tolower(str[i]);
-	}
-	return (str);
 }
 
 std::string	add_to_modestring(std::string const& str, std::string const& mode)

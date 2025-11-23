@@ -20,20 +20,21 @@
 # include <algorithm>
 
 std::vector<std::string>	split(const std::string &s, char delimiter);
-std::vector<std::string> split2(const std::string &s, const std::string &delims);
+std::vector<std::string>	split2(const std::string &s, const std::string &delims);
 void						setup_signals(void);
 std::string					ft_tolower(std::string str);
 std::string					add_to_modestring(std::string const& str, std::string const& mode);
 std::string 				convertTimeStr(time_t t);
 
-typedef struct s_warn{
+typedef struct s_warn
+{
 	std::string* nick;
 	int lvl;
-} t_warn;
+}				t_warn;
 
 # include "Bot.hpp"
 # include "Client.hpp"
 # include "Channel.hpp"
 # include "Server.hpp"
-	
+
 #endif

@@ -1,16 +1,19 @@
 #include "../includes/header.hpp"
 
+
 int	Server::checkCap(Client& client, std::vector<std::string>& mess)
 {
 	std::string message;
 
 	if (mess.size() == 1)
-		return 0;
-	if (mess[1] == "LS"){
+		return (0);
+	if (mess[1] == "LS")
+	{
 		message = ":irc CAP * LS :\r\n";
 		send(client.getFd(), message.c_str(), message.size(), 0);
 	}
-	else if (mess[1] == "END"){
+	else if (mess[1] == "END")
+	{
 		if (!client.getIdent().empty() && !client.getNick().empty())
 		{
 			client.setState(client.getState() + 1);
@@ -60,10 +63,9 @@ int Server::checkUser(Client& client, std::vector<std::string>& mess)
 		return (this->sendMessLocal("461", "", client, "Not enough parameters"), 0);
 	if (mess[4][0] != ':')
 		return (this->sendMessLocal("461", "", client, "Not enough parameters"), 0);
-	for (int i = 4; i < (int)mess.size(); i++)
-	{
+	client.setIdent(mess[1]);
+	for (size_t i = 4; i < mess.size(); i++)
 		realname += mess[i];
-	}
 	if (!this->autorisedIdent(mess[1]) || !this->autorisedRealName(realname))
 		return (this->sendMessLocal("461", "", client, "Not enough parameters"), 0);
 	client.setIdent(mess[1]);
@@ -127,7 +129,8 @@ int	Server::checkKick(Client& client, std::vector<std::string>& mess)
 	channel->removeUser(mess[2]);
 	channel->removeOperator(mess[2]);
 	client.removeChannel(mess[1]);
-	if (channel->getUsers().size() == 0){
+	if (channel->getUsers().size() == 0)
+	{
 		i = this->getIndexChannel(channel->getName());
 		delete this->_channel[i];
 		this->_channel.erase(this->_channel.begin() + i);
@@ -147,9 +150,9 @@ int Server::checkInvite(Client& client, std::vector<std::string>& mess)
 
 	if (mess.size() < 3)
 		return (this->sendMessLocal("461", mess[0], client, "Not enough parameters"), 0);
-	if (!this->checkExistClient(mess[1]) && ++err)
+	if (!this->checkExistClient(mess[1]) && err++)
 		this->sendMessLocal("401", mess[1], client, "No such nick/channel");
-	if (!this->checkExistChannel(mess[2]) && ++err)
+	if (!this->checkExistChannel(mess[2]) && err++)
 		this->sendMessLocal("403", mess[2], client, "No such channel");
 	if (err > 0)
 			return 0;
@@ -219,8 +222,6 @@ static int	is_name_ok(std::string const& name)
 // JOIN [#channel,&channel] [key,key]
 int		Server::checkJoin(Client& client, std::vector<std::string>& mess)
 {
-	bool						is_invite = false;
-
 	if (mess.size() < 2 || mess.size() > 3)
 		return (this->sendMessLocal("461", mess[0], client, "Not enough parameters"), 0);
 	if (mess.size() == 2 && mess[1] == "0")
@@ -281,12 +282,14 @@ int		Server::checkJoin(Client& client, std::vector<std::string>& mess)
 
 	// check if client already on
 	if (!is_created && channel->checkUser(client.getNick()))
-		return (this->sendMessLocal("443", channel->getName(), client, "is already on channel"),0);
+		return (this->sendMessLocal("443", channel->getName(), client, "is already on channel"), 0);
 
 	// check invite-only
+	bool	is_invite = false;
 	if (!is_created && channel->getOptInviteOnly() == true)
 	{
 		std::vector<t_invite> const	invite = channel->getInvite();
+
 		for (size_t i = 0; i < invite.size(); ++i)
 		{
 			if (client.getNick() == invite[i].client->getNick())
@@ -314,10 +317,11 @@ int		Server::checkJoin(Client& client, std::vector<std::string>& mess)
 		client.addChannel(this->_channel[this->getIndexChannel(mess_cpy[1])]);
 		channel->addUser(client);
 	}
-	// :Alice!~alice@host JOIN :#test (par tous users du channel et elle-même)
+
 	if (is_invite)
 		channel->delInvite(client);
-	this->sendMessChannel(mess_cpy[1], mess_cpy[0], mess_cpy[1], 1, client);
+	// :Alice!~alice@host JOIN :#test (par tous users du channel et elle-même)
+	this->sendMessChannel(mess_cpy[1], mess_cpy[0], mess_cpy[1], 0, client);
 	if (!channel->getTopic().topic.empty())
 	{
 		this->sendMessLocal("332", mess_cpy[1], client, channel->getTopic().topic);
@@ -340,43 +344,43 @@ static bool	is_userlimit_ok(std::string const& str)
 	return (true);
 }
 
-// MODE #channel => demande, réponse : :irc.local.net 324 Alice #channel +itk secret
-//										:irc.local.net 329 Alice #channel 1730910842
+/*
+MODE #channel => demande, réponse : 
+	:irc.local.net 324 Alice #channel +itk secret
+	:irc.local.net 329 Alice #channel 1730910842
 
-// MODE #channel +itklo secret 10 <client> => demande, réponse toujours sous cette forme
-// MODE #channel +itkl-o secret 10 <client> => demande, réponse toujours sous cette forme
-// MODE #channel +i +t +k secret +l 10 +o <client> => demande
-// MODE #channel +i +t +kl secret 10 +o <client> => demande
-// MODE #channel -option <client> => demande
+--- CLASSIC ---
+MODE #channel +itklo secret 10 <client> => demande, réponse toujours sous cette forme
+MODE #channel +itkl-o secret 10 <client> => demande, réponse toujours sous cette forme
+MODE #channel +i +t +k secret +l 10 +o <client> => demande
+MODE #channel +i +t +kl secret 10 +o <client> => demande
+MODE #channel -option <client> => demande
 
-// MODE #channel +i <client> => client ignoré
-// MODE #channel +i +t +k secret poulain +l 10 +o <client> cage => poulain et cage ignorés
-// MODE #channel +kti secret poulain +l 10 +o <client> cage => poulain et cage ignorés
+--- UNUSUAL ---
+MODE #channel ++ => renvoie rien
+MODE #channel ++i => interprété comme +i
+MODE #channel +-i => interprété comme -i
+MODE #channel +t+-i => interprété comme +t et -i
+MODE #channel poulain => interprété comme modestring +poulain => erreur unknown mode 'p'
+MODE #channel +i <arg> => arg ignoré
+MODE #channel +i +t +k secret poulain +l 10 +o <client> cage => poulain et cage ignorés
+MODE #channel +kti secret poulain +l 10 +o <client> cage => poulain et cage ignorés
+*/
 int		Server::checkMode(Client& client, std::vector<std::string>& mess)
 {
 	if (mess.size() < 2)
 		return (this->sendMessLocal("461", mess[0], client, "Not enough parameters"), 0);
-	
-	if (!this->checkExistChannel(mess[1]))
-		return (this->sendMessLocal("403", mess[1], client, "No such channel"), 0);
-
-	Channel*	channel = this->_channel[this->getIndexChannel(mess[1])];
-
-	if (!channel->checkUser(client.getNick()))
-		return (this->sendMessLocal("442", mess[1], client, "You're not on that channel"), 0);
 
 	if (mess.size() > 2)
 	{
-		if (!channel->checkOperator(client.getNick()))
-			return (this->sendMessLocal("482", mess[1], client, "You're not channel operator"), 0);
-
 		std::vector<std::string>	mess_cpy = mess;
 
 		// separation into distinct parameters
 		std::vector<std::string>	parameters;
-		for (std::vector<std::string>::iterator	it = mess_cpy.begin() + 2; it < mess_cpy.end(); it++)
+		for (std::vector<std::string>::iterator	it = mess_cpy.begin() + 2; it < mess_cpy.end(); it++) // we ignore MODE #channel
 		{
-			if (((*it)[0] == '+' || (*it)[0] == '-') && (*it).size() > 2)
+			// is modestring ?
+			if ((*it)[0] == '+' || (*it)[0] == '-')
 			{
 				// separate modestring
 				std::vector<std::string>	tmp;
@@ -385,95 +389,119 @@ int		Server::checkMode(Client& client, std::vector<std::string>& mess)
 				for (size_t i = 0; i < (*it).size(); i++)
 				{
 					if ((*it)[i] == '+' || (*it)[i] == '-')
-						what = (*it)[i++];
-					mode = what + (*it)[i];
-					tmp.push_back(mode);
+						what = (*it)[i];
+					else
+					{
+						mode = what + (*it)[i];
+						tmp.push_back(mode);
+					}
 				}
-				parameters.insert(parameters.end(), tmp.begin(), tmp.end());
+				if (!tmp.empty())
+					parameters.insert(parameters.end(), tmp.begin(), tmp.end());
 			}
 			else
 				parameters.push_back(*it);
 		}
+
+		if (parameters.empty())
+			return (0);
 		
-		// sort into pairs of arguments, if a mode needs an argument or not
-		typedef std::string mode;
-		typedef std::string argument;
-		
-		std::map<mode, argument>	map;
-		for (std::vector<std::string>::iterator itp = parameters.begin(); itp != parameters.end(); itp++)
+		if (!this->checkExistChannel(mess[1]))
+			return (this->sendMessLocal("403", mess[1], client, "No such channel"), 0);
+
+		Channel*	channel = this->_channel[this->getIndexChannel(mess[1])];
+
+		if (!channel->checkUser(client.getNick()))
+			return (this->sendMessLocal("442", mess[1], client, "You're not on that channel"), 0);
+
+		if (!channel->checkOperator(client.getNick()))
+			return (this->sendMessLocal("482", mess[1], client, "You're not channel operator"), 0);
+
+		// execute MODE
+		for (std::vector<std::string>::iterator it = parameters.begin(); it != parameters.end(); it++)
 		{
-			if ((*itp)[0] == '+' || (*itp)[0] == '-')
+			if (((*it)[0] == '+' || (*it)[0] == '-') && std::string("itklo").find((*it)[0]) != 1)
 			{
-				if ((*itp) == "+k" || (*itp) == "+l" || (*itp) == "+o" || (*itp) == "-o")
+				std::vector<std::string>::iterator	arg;
+				bool								is_arg = false;
+
+				// does mode need arg ?
+				if ((*it) == "+k" || (*it) == "+l" || (*it) == "+o" || (*it) == "-o")
 				{
-					std::vector<std::string>::iterator arg;
-					for (arg = itp; arg != parameters.end(); arg++)
+					for (arg = it; arg != parameters.end(); arg++)
 					{
 						if ((*arg)[0] != '+' && (*arg)[0] != '-')
 							break;
 					}
 					if (arg == parameters.end())
 						return (this->sendMessLocal("461", mess[0], client, "Not enough parameters"), 0);
-					map.insert(std::pair<mode, argument>(*itp, *arg));
-					parameters.erase(arg);
+					else
+						is_arg = true;
 				}
-				else
-					map.insert(std::pair<mode, argument>(*itp, ""));
+
+				// change mode
+				if (*it == "+i")
+					channel->setOptInviteOnly(true);
+				else if (*it == "+t")
+					channel->setOptRestrictTopic(true);
+				else if (*it == "+k")
+				{
+					if (channel->getOptChannelKey() == true && *arg == channel->getChannelKey())
+						return (this->sendMessLocal("467", mess[1], client, "Channel key already set"), 0);
+					channel->setOptChannelKey(true);
+					channel->setChannelKey(*arg);
+				}
+				else if (*it == "+l")
+				{
+					channel->setOptUserLimit(true);
+					if (!is_userlimit_ok(*arg))
+						return (this->sendMessLocal("461", mess[0], client, "Not enough parameters"), 0);
+					channel->setUserLimit(std::atoi((*arg).c_str()));
+				}
+				else if (*it == "+o")
+				{
+					if (!channel->checkUser(*arg))
+						return (this->sendMessLocal("441", *arg + " " + mess[1], client, "They aren't on that channel"), 0);
+					channel->addOperator(this->getClient(*arg));
+				}
+				else if (*it == "-i")
+					channel->setOptInviteOnly(false);
+				else if (*it == "-t")
+					channel->setOptRestrictTopic(false);
+				else if (*it == "-k")
+				{
+					channel->setOptChannelKey(false);
+					channel->setChannelKey("");
+				}
+				else if (*it == "-l")
+				{
+					channel->setOptUserLimit(false);
+					channel->setUserLimit(0);
+				}
+				else if (*it == "-o")
+				{
+					if (!channel->checkUser(*arg))
+						return (this->sendMessLocal("441", *arg + " " + mess[1], client, "They aren't on that channel"), 0);
+					channel->removeOperator(*arg);
+				}
+				if (is_arg)
+					parameters.erase(arg);
+			}
+			else
+			{
+				size_t	i;
+				for (i = 0; i < (*it).size(); i++)
+				{
+					if (std::isdigit((*it)[i]))
+						break ;
+				}
+				if (i != (*it).size())
+					this->sendMessLocal("472", (*it).substr(i, 1), client, "is unknown mode char to me");
+				parameters.erase(it, parameters.end());
+				break ;
 			}
 		}
 
-		// change modes
-		for (std::map<mode, argument>::iterator itm = map.begin(); itm != map.end(); itm++)
-		{
-			if (itm->first == "+i")
-				channel->setOptInviteOnly(true);
-			else if (itm->first == "+t")
-				channel->setOptRestrictTopic(true);
-			else if (itm->first == "+k")
-			{
-				if (channel->getOptChannelKey() == true && itm->second == channel->getChannelKey())
-					return (this->sendMessLocal("467", mess[1], client, "Channel key already set"), 0);
-				channel->setOptChannelKey(true);
-				channel->setChannelKey(itm->second);
-			}
-			else if (itm->first == "+l")
-			{
-				channel->setOptUserLimit(true);
-				if (!is_userlimit_ok(itm->second))
-					return (this->sendMessLocal("461", mess[0], client, "Not enough parameters"), 0);
-				channel->setUserLimit(std::atoi(itm->second.c_str()));
-			}
-			else if (itm->first == "+o")
-			{
-				if (!channel->checkUser(itm->second))
-					return (this->sendMessLocal("441", itm->second + " " + mess[1], client, "They aren't on that channel"), 0);
-				channel->addOperator(this->getClient(itm->second));
-			}
-			else if (itm->first == "-i")
-				channel->setOptInviteOnly(false);
-			else if (itm->first == "-t")
-				channel->setOptRestrictTopic(false);
-			else if (itm->first == "-k")
-			{
-				channel->setOptChannelKey(false);
-				channel->setChannelKey("");
-			}
-			else if (itm->first == "-l")
-			{
-				channel->setOptUserLimit(false);
-				channel->setUserLimit(0);
-			}
-			else if (itm->first == "-o")
-			{
-				if (!channel->checkUser(itm->second))
-					return (this->sendMessLocal("441", itm->second + " " + mess[1], client, "They aren't on that channel"), 0);
-				channel->removeOperator(itm->second);
-			}
-			else
-				return (this->sendMessLocal("472", itm->first.substr(1, 1), client, "is unknown mode char to me"), 0);
-			// TODO : vérifier erreur unknown modestring
-		}
-		
 		// construct response for client
 		std::vector<std::string>	order;
 		order.push_back("+i");
@@ -488,40 +516,56 @@ int		Server::checkMode(Client& client, std::vector<std::string>& mess)
 		order.push_back("-l");
 		order.push_back("-o");
 
-		parameters.clear();
-		parameters.insert(parameters.end(), mess_cpy.begin(), mess_cpy.begin() + 2); // MODE #channel
+		mess_cpy.clear();
 		for (std::vector<std::string>::iterator ito = order.begin(); ito != order.end(); ito++)
 		{
-			for (std::map<mode, argument>::iterator itm = map.begin(); itm != map.end(); itm++)
+			for (std::vector<std::string>::iterator itp = parameters.begin(); itp != parameters.end(); itp++)
 			{
-				if (itm->first == *ito)
+				if (*itp == *ito)
 				{
-					if (parameters.size() > 2)
-						parameters[2] = add_to_modestring(parameters[2], itm->first);
+					if (mess_cpy.size() > 2)
+						mess_cpy[2] = add_to_modestring(mess_cpy[2], *itp);
 					else
-						parameters.push_back(itm->first);
-					if ((*ito) == "+k" || (*ito) == "+l" || (*ito) == "+o" || (*ito) == "-o") // add only necessary args
-						parameters.push_back(itm->second);
+						mess_cpy.push_back(*itp);
+					if ((*itp) == "+k" || (*itp) == "+l" || (*itp) == "+o" || (*itp) == "-o")
+					{
+						std::vector<std::string>::iterator arg;
+						for (arg = itp; arg != parameters.end(); arg++)
+						{
+							if ((*arg)[0] != '+' && (*arg)[0] != '-')
+								break;
+						}
+						mess_cpy.push_back(*arg);
+						parameters.erase(arg);
+					}
 				}
 			}
 		}
 
 		std::string	response;
+
 		// we skip MODE #channel
-		for (std::vector<std::string>::iterator it = parameters.begin() + 2; it != parameters.end(); it++)
+		for (std::vector<std::string>::iterator it = mess_cpy.begin() + 2; it != mess_cpy.end(); it++)
 		{
-			if (it != parameters.begin() + 2)
+			if (it != mess_cpy.begin() + 2)
 				response += ' ';
 			response += *it;
 		}
-		this->sendMessChannel(channel->getName(), parameters[0] + " " + parameters[1] + " " + response, "", 1, client);
+		this->sendMessChannel(mess[1], mess[0] + " " + mess[1] + " " + response, "", 0, client);
 	}
 	else
 	{
+		if (!this->checkExistChannel(mess[1]))
+			return (this->sendMessLocal("403", mess[1], client, "No such channel"), 0);
+
+		Channel*	channel = this->_channel[this->getIndexChannel(mess[1])];
+
+		if (!channel->checkUser(client.getNick()))
+			return (this->sendMessLocal("442", mess[1], client, "You're not on that channel"), 0);
+
 		this->sendMessLocal("324", mess[0] + " " + channel->createStringModes(), client, "");
 		this->sendMessLocal("329", mess[0] + " " + convertTimeStr(channel->getCreationTime()), client, "");
 	}
-	std::cout << "ici : " << channel->getOperators().size() << std::endl;
 	return (0);
 }
 
@@ -530,9 +574,6 @@ int		Server::checkMode(Client& client, std::vector<std::string>& mess)
 // :nick!user@host PART #channel
 int		Server::checkPart(Client& client, std::vector<std::string>& mess)
 {
-	int i;
-	std::string	reason;
-
 	if (mess.size() < 2)
 		return (this->sendMessLocal("461", mess[0], client, "Not enough parameters"), 0);
 
@@ -561,6 +602,8 @@ int		Server::checkPart(Client& client, std::vector<std::string>& mess)
 
 	if (!channel->checkUser(client.getNick()))
 		return (this->sendMessLocal("442", mess_cpy[1], client, "You're not on that channel"), 0);
+	
+	std::string	reason;
 	if (mess_cpy.size() < 3)
 		reason = "";
 	else if (mess_cpy[2][0] != ':')
@@ -575,14 +618,19 @@ int		Server::checkPart(Client& client, std::vector<std::string>& mess)
 		}
 		reason.erase(0, 1);
 	}
-	this->sendMessChannel(mess_cpy[1], mess_cpy[0] + " " + mess_cpy[1], reason, 1, client);
+	this->sendMessChannel(mess_cpy[1], mess_cpy[0] + " " + mess_cpy[1], reason, 0, client);
+
 	client.removeChannel(mess_cpy[1]);
 	channel->removeUser(client.getNick());
-	if (channel->getUsers().size() == 0){
-		i = this->getIndexChannel(channel->getName());
+
+	// check if channel empty
+	if (channel->getUsers().size() == 0)
+	{
+		int i = this->getIndexChannel(channel->getName());
 		delete this->_channel[i];
 		this->_channel.erase(this->_channel.begin() + i);
 	}
+
 	return (0);
 }
 
@@ -592,7 +640,7 @@ int		Server::checkPart(Client& client, std::vector<std::string>& mess)
 int		Server::checkNotice(Client& client, std::vector<std::string>& mess)
 {
 	if (mess.size() < 3)
-		return (1);
+		return (0);
 	
 	std::string message;
 	for (size_t i = 2; i < mess.size(); i++)
@@ -612,7 +660,7 @@ int		Server::checkNotice(Client& client, std::vector<std::string>& mess)
 		Channel*	channel = this->_channel[this->getIndexChannel(mess[1])];
 
 		if (channel->checkUser(client.getNick())) // if user in channel
-			this->sendMessChannel(mess[1], mess[0] + " " + mess[1] , message, 0,client);
+			this->sendMessChannel(mess[1], mess[0] + " " + mess[1], message, 0, client);
 	}
 	return (0);
 }
@@ -626,8 +674,8 @@ int		Server::checkList(Client& client, std::vector<std::string>& mess)
 	if (mess.size() > 1)
 	{
 		// separation of many channels into one at a time
-		std::vector<std::string> mess_cpy = mess;
-		Channel*	channel;
+		std::vector<std::string>	mess_cpy = mess;
+		Channel*					channel;
 		while (mess_cpy[1].find(',') != std::string::npos)
 		{
 			if (this->checkExistChannel(mess_cpy[1].substr(0, mess_cpy[1].find(','))))
@@ -783,28 +831,32 @@ int		Server::checkWho(Client& client, std::vector<std::string>& mess)
 	return (0);
 }
 
-int		Server::checkHelp(Client& client, std::vector<std::string>& mess){
+int		Server::checkHelp(Client& client, std::vector<std::string>& mess)
+{
 	if (mess.size() != 1)
 		return (this->sendMessBot(*this->_bot[0], client, "NOTICE", "Unknown argument for !help. Usage: !help"), 0);
 	this->sendMessBot(*this->_bot[0], client, "NOTICE", "Available commands: !help, !ping, !rules, !stats");
 	return (0);
 }
 
-int		Server::checkPing(Client& client, std::vector<std::string>& mess){
+int		Server::checkPing(Client& client, std::vector<std::string>& mess)
+{
 	if (mess.size() != 1)
 		return (this->sendMessBot(*this->_bot[0], client, "NOTICE", "Unknown argument for !ping. Usage: !ping"), 0);
 	this->sendMessBot(*this->_bot[0], client, "NOTICE", "Pong!");
 	return (0);
 }
 
-int		Server::checkRules(Client& client, std::vector<std::string>& mess){
+int		Server::checkRules(Client& client, std::vector<std::string>& mess)
+{
 	if (mess.size() != 1)
 		return (this->sendMessBot(*this->_bot[0], client, "NOTICE", "Unknown argument for !rules. Usage: !rules"), 0);
 	this->sendMessBot(*this->_bot[0], client, "NOTICE", "No insults, no flood, follow channel rules.");
 	return (0);
 }
 
-int		Server::checkStats(Client& client, std::vector<std::string>& mess){
+int		Server::checkStats(Client& client, std::vector<std::string>& mess)
+{
 	std::stringstream ss;
 
 	if (mess.size() != 1)
@@ -814,7 +866,8 @@ int		Server::checkStats(Client& client, std::vector<std::string>& mess){
 	return (0);
 }
 
-int		Server::checkNote(Client& client, std::vector<std::string>& mess){
+int		Server::checkNote(Client& client, std::vector<std::string>& mess)
+{
 	if (mess.size() != 1)
 		return (this->sendMessBot(*this->_bot[0], client, "NOTICE", "Unknown argument for !note. Usage: !note"), 0);
 	this->sendMessBot(*this->_bot[0], client, "NOTICE", "Met une bonne note ou jte kick tu serv");

@@ -29,7 +29,8 @@ class Server
 		
 		std::vector<pollfd> 	_fds; // tableau de structre, contient sockets et évènement à surveiller
 		std::vector<Client*> 	_clients; // tableau de classe, gestionnaire des données client
-		std::vector<Bot*> 	_bot; // tableau de classe, gestionnaire des données client
+		std::vector<Bot*> 		_bot;
+		
 		sockaddr_in				_addr; // données à mettre dans le socket principal
 		std::vector<t_cmd>		_cmd;
 		std::vector<Channel*>	_channel;
@@ -70,11 +71,10 @@ class Server
 
 		int			errorState(int state, std::string const& cmd, Client& client);
 		void		sendMessLocal(std::string const& err, std::string const& cmd, Client const& client, std::string const& body);
-		void		sendMessUser(Client& s, Client const& r, std::string const& cmd, std::string const& body);
+		void		sendMessUser(Client const& s, Client const& r, std::string const& cmd, std::string const& body);
 		void		sendMessGlobal(std::string const& cmd, std::string const& mess, Client const& c);
-		void		sendMessChannel(std::string const& channel, std::string const& argm, std::string const& mess,int sendme , Client& c);
-		void	sendMessBot(Bot& b, Client const& c, std::string cmd, const std::string& mess);
-
+		void		sendMessChannel(std::string const& channel, std::string const& argm, std::string const& mess, int sendme, Client& c);
+		void		sendMessBot(Bot& b, Client const& c, std::string cmd, const std::string& mess);
 	
 		int			getIndexChannel(std::string const& name);
 		Client&		getClient(std::string const& nick);
