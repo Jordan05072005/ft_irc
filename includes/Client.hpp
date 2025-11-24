@@ -5,11 +5,12 @@
 
 class Channel;
 
-typedef struct s_mute{
+typedef struct s_mute
+{
 	int warn;
 	bool mute;
 	std::time_t end;
-} t_mute;
+}				t_mute;
 
 class Client
 {
@@ -31,7 +32,7 @@ class Client
 		std::string	_serv;
 
 		std::vector<Channel*>	_channel;
-		t_mute		_mute;
+		t_mute					_mute;
 
 		int						_state; // state = 1 -> login, state = 2 -> register
 
@@ -68,10 +69,6 @@ class Client
 		void 					addWarn(void);
 		void 					resetWarn(void);
 		bool					isMute();
-
-
-
-
 };
 
 #endif

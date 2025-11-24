@@ -95,7 +95,7 @@ const t_topic& Channel::getTopic(void) const
 void 	Channel::setTopic(const std::string& topic, const std::string& nick)
 {
 	std::time_t now = std::time(NULL);
-		
+	
 	this->_topic.topic = topic;
 	this->_topic.time = now;
 	this->_topic.modifBy = nick;
@@ -210,7 +210,7 @@ void	Channel::addUser(Client& user)
 
 void	Channel::addOperator(Client& user)
 {
-	this->_operators.push_back(&user);
+	this->_users.push_back(&user);
 	return ;
 }
 
@@ -244,9 +244,8 @@ void	Channel::removeOperator(std::string const& nick)
 {
 	for (size_t i = 0; i < this->_operators.size(); i++)
 	{
-		if (this->_operators[i]->getNick() == nick){
+		if (this->_operators[i]->getNick() == nick)
 			this->_operators.erase(this->_operators.begin() + i);
-		}
 	}
 	return ;
 }
@@ -261,11 +260,12 @@ void	Channel::removeInvite(void)
 	}
 }
 
-void Channel::delInvite(Client &c){
-	for (size_t i = 0; i < this->_invite.size(); i++){
-		if (this->_invite[i].client->getNick() == c.getNick()){
+void Channel::delInvite(Client &c)
+{
+	for (size_t i = 0; i < this->_invite.size(); i++)
+	{
+		if (this->_invite[i].client->getNick() == c.getNick())
 			this->_invite.erase(this->_invite.begin() + i);
-		}
 	}
 }
 
@@ -287,7 +287,7 @@ int Channel::checkOperator(const std::string& nick) const
 {
 	for (size_t i = 0; i < this->_operators.size(); i++)
 	{
-		if (this->_operators[i]->getNick() == nick)
+		if (this->_users[i]->getNick() == nick)
 			return (1);
 	}
 	return (0);

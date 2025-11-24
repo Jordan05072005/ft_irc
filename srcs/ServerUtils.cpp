@@ -1,5 +1,5 @@
-
 #include "../includes/header.hpp"
+
 
 int	Server::checkUniqueNick(std::string const& nick)
 {
@@ -31,12 +31,14 @@ int	Server::checkExistChannel(std::string const& name)
 	return (0);
 }
 
-int Server::autorisedNick(std::string& name){
+int Server::autorisedNick(std::string& name)
+{
 	std::string autorised_start = "[]\\_^{ }|`";
 	std::string autorised = "-[]\\`_^{}|";
 	if (name.size() > 30)
 		return (0);
-	for (size_t i = 0; i < name.size(); i++){
+	for (size_t i = 0; i < name.size(); i++)
+	{
 		if (i == 0 
 			&& autorised_start.find(name[i]) == std::string::npos
 			&& !(name[i] >= 'A' && name[i] <= 'Z')
@@ -54,10 +56,12 @@ int Server::autorisedNick(std::string& name){
 	return (1);
 }
 
-int Server::autorisedIdent(std::string& name){
+int Server::autorisedIdent(std::string& name)
+{
 	if (name.size() > 30)
 		return (0);
-	for (size_t i = 0; i < name.size(); i++){
+	for (size_t i = 0; i < name.size(); i++)
+	{
 		if (i != 0
 			&& name[i] != '_'
 			&& !(name[i] >= 'A' && name[i] <= 'Z')
@@ -69,15 +73,18 @@ int Server::autorisedIdent(std::string& name){
 	return (1);
 }
 
-int Server::autorisedRealName(std::string& name){
+int Server::autorisedRealName(std::string& name)
+{
 	if (name.size() > 30)
 		return (0);
-	for (size_t i = 0; i < name.size(); i++){
+	for (size_t i = 0; i < name.size(); i++)
+	{
 		if (i != 0 && name[i] == ':')
 			return (0);
 	}
 	return (1);
 }
+
 
 /*-----------------------------------------------------------------------------------------------*/
 
@@ -128,8 +135,6 @@ void Server::delInvite(void)
 	}
 	return ;
 }
-
-
 
 //:Alice!alice@host PART #general :Bye everyone!
 void	Server::delAllChannelClient(Client& client, std::string& cmd, std::string mess)

@@ -28,7 +28,8 @@ void Server::sendMessLocal(std::string const& err, std::string const& cmd, Clien
 	send(c.getFd(), err_mess.c_str(), err_mess.size(), 0);
 }
 
-void Server::sendMessBot(Bot& b, Client const& c, std::string cmd, const std::string& mess){
+void Server::sendMessBot(Bot& b, Client const& c, std::string cmd, const std::string& mess)
+{
 	std::string err_mess;
 	std::stringstream ss;
 
@@ -38,7 +39,7 @@ void Server::sendMessBot(Bot& b, Client const& c, std::string cmd, const std::st
 }
 
 //:Jo!~jo@127.0.0.1 PRIVMSG Max :Salut Max, ça va ?
-void	Server::sendMessUser(Client& s, Client const& r, std::string const& cmd, std::string const& body)
+void	Server::sendMessUser(Client const& s, Client const& r, std::string const& cmd, std::string const& body)
 {
 	std::string err_mess;
 	std::string nick;
@@ -65,7 +66,6 @@ void Server::sendMessGlobal(std::string const& cmd, std::string const& mess, Cli
 	return ;
 }
 
-// TODO: enlever argument
 // Alice JOIN :#général
 void Server::sendMessChannel(std::string const& channel, std::string const& argm, std::string const& mess, int sendme , Client& c)
 {
@@ -73,7 +73,6 @@ void Server::sendMessChannel(std::string const& channel, std::string const& argm
 	std::string message;
 	int i;
 	std::vector<Client*> t;
-
 
 	ss << ":" << (c.getNick().empty() ? "*" : c.getNick()) << "!~" << (c.getIdent().empty() ? "*" : c.getIdent()) << "@" << c.getHost() << (argm.empty() ? "" : (" " + argm))<< (mess.empty() ? "" : (" :" + mess)) << "\r\n";
 	message = ss.str();
