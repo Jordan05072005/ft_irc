@@ -49,6 +49,7 @@ void	Server::init(int port, std::string const& password)
 		this->_cmd.push_back(init_cmd("PRIVMSG", &Server::checkPrivmsg, 2));
 		this->_cmd.push_back(init_cmd("NAMES", &Server::checkNames, 2));
 		this->_cmd.push_back(init_cmd("WHO", &Server::checkWho, 2));
+		this->_cmd.push_back(init_cmd("whois", &Server::checkWhois, 2));
 		this->_cmd.push_back(init_cmd("!help", &Server::checkHelp, 2));
 		this->_cmd.push_back(init_cmd("!ping", &Server::checkPing, 2));
 		this->_cmd.push_back(init_cmd("!rules", &Server::checkRules, 2));

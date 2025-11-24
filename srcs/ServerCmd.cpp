@@ -116,7 +116,7 @@ int	Server::checkKick(Client& client, std::vector<std::string>& mess)
 	if (!channel->checkUser(mess[2]))
 		return (this->sendMessLocal("441", mess[2] + " " + mess[1], client, "They aren't on that channel"), 0);
 	if (mess.size() == 3)
-		message == "";
+		message = "";
 	else if (mess[3][0] == ':')
 	{
 		for (size_t i = 3; i < mess.size(); i++)
@@ -831,38 +831,45 @@ int		Server::checkWho(Client& client, std::vector<std::string>& mess)
 	return (0);
 }
 
-//whois
-// int		Server::checkWho(Client& client, std::vector<std::string>& mess){
-// 	Client *c;
-// 	if (mess.size() == 1)
-// 		return (this->sendMessLocal("431", mess[0], client, "No nickname given") , 0);
-// 	if (!this->checkExistClient(mess[1]))
-// 		return (this->sendMessLocal("401", mess[1], client, "No such nick") , 0);
-// 	c = this->getClient(mess[1]);
-// 	this->sendMessLocal("311", c->getNick() + " ~" + c->getIdent() + " " + c->getHost() + " * " , client, c->getRealName());
-// 	this->sendMessLocal("312", c->getNick() + " " + c->getHost() + " " , client, "IRC42 Server");
-// // 3️⃣ RPL_WHOISIDLE — 317
-// // :irc.example.com 317 <requester> <nickname> <seconds idle> :seconds idle
+// whois
+int		Server::checkWhois(Client& client, std::vector<std::string>& mess){
+	Client *c;
+	std::stringstream ss;
+	if (mess.size() == 1)
+		return (this->sendMessLocal("431", mess[0], client, "No nickname given") , 0);
+	if (!this->checkExistClient(mess[1]))
+		return (this->sendMessLocal("401", mess[1], client, "No such nick") , 0);
+	c = &this->getClient(mess[1]);
+	this->sendMessLocal("311", c->getNick() + " ~" + c->getIdent() + " " + c->getHost() + " * " , client, c->getRealName());
+	this->sendMessLocal("312", c->getNick() + " " + c->getHost() + " " , client, "IRC42 Server");
+	ss << c->getNick() << " " << c->getIdle();
+	this->sendMessLocal("317", ss.str(), client, "seconds idle");
+	this->sendMessLocal("319", c->getNick() , client, c->getChannelsList());
+	this->sendMessLocal("318", c->getNick() , client, "End of WHOIS list");
+	return 0;
+
+// 3️⃣ RPL_WHOISIDLE — 317
+// :irc.example.com 317 <requester> <nickname> <seconds idle> :seconds idle
 
 
-// // <seconds idle> → temps depuis la dernière activité du client en secondes
+// <seconds idle> → temps depuis la dernière activité du client en secondes
 
-// // 4️⃣ RPL_WHOISCHANNELS — 319
-// // :irc.example.com 319 <requester> <nickname> :<channel list>
-
-
-// // <channel list> → canaux dans lesquels l’utilisateur est actuellement connecté, séparés par des espaces
-
-// // 5️⃣ RPL_ENDOFWHOIS — 318
-// // :irc.example.com 318 <requester> <nickname> :End of WHOIS list
+// 4️⃣ RPL_WHOISCHANNELS — 319
+// :irc.example.com 319 <requester> <nickname> :<channel list>
 
 
-// // Terminer la réponse WHOIS, obligatoire
+// <channel list> → canaux dans lesquels l’utilisateur est actuellement connecté, séparés par des espaces
 
-// // <nickname> → pseudo interrogé
+// 5️⃣ RPL_ENDOFWHOIS — 318
+// :irc.example.com 318 <requester> <nickname> :End of WHOIS list
+
+
+// Terminer la réponse WHOIS, obligatoire
+
+// <nickname> → pseudo interrogé
 
 	
-// }
+}
 
 int		Server::checkHelp(Client& client, std::vector<std::string>& mess)
 {

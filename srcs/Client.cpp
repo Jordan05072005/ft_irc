@@ -12,6 +12,7 @@ Client::Client(int fd, sockaddr_in addr, socklen_t len) : _fd(fd), _addr(addr), 
 	this->_buff = "";
 	this->_mute.warn = 0;
 	this->_mute.mute = false;
+	this->_last_activity = std::time(NULL);
 }
 
 Client::Client(const Client& cpy) : _state(1)
@@ -34,6 +35,7 @@ Client& Client::operator=(const Client& cpy)
 		this->_ident = cpy._ident;
 		this->_serv = cpy._serv;
 		this->_mute = cpy._mute;
+		this->_last_activity = cpy._last_activity;
 	}
 	// cpy.setFd(-1);
 	return (*this);
@@ -66,7 +68,7 @@ std::string const& Client::getBuf(void) const
 
 void Client::addBuf(char *buf, int len)
 {
-	this->_buff.assign(buf, len); 
+	this->_buff.append(buf, len); 
 }
 
 void Client::resetBuf(void)
@@ -128,6 +130,20 @@ void Client::setHost(std::string& host)
 std::vector<Channel*>&	Client::getChannels(void)
 {
 	return (this->_channel);
+}
+
+std::string Client::getChannelsList(){
+	std::string str;
+
+	for (size_t i = 0; i < this->_channel.size(); ++i)
+	{
+		if (i > 0)
+			str += " ";
+		str += this->_channel[i]->getName();
+	}
+	if (str.empty())
+		str += " ";
+	return (str);
 }
 
 void	Client::addChannel(Channel* channel)

@@ -62,6 +62,7 @@ class Client
 		void	setLastActivity(void);
 
 		std::vector<Channel*>&	getChannels(void);
+		std::string	getChannelsList();
 		void					addChannel(Channel* channel);
 		void					removeChannel(std::string const& name);
 		void					removeAllChannels(void);
