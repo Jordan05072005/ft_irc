@@ -24,7 +24,7 @@ class Client
 		socklen_t 	_len; // taille de sockaddr_in
 
 		std::string	_buff;
-		time_t	_last_interact;
+		time_t	_last_activity;
 
 		std::string _nick;
 		std::string _ident;
@@ -58,6 +58,8 @@ class Client
 		void	 				setHost(std::string& host);
 		std::string const&		getServ(void) const;
 		void	 				setServ(std::string& host);
+		time_t	getIdle() const;
+		void	setLastActivity(void);
 
 		std::vector<Channel*>&	getChannels(void);
 		void					addChannel(Channel* channel);

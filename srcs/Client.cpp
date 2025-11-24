@@ -209,6 +209,12 @@ bool	Client::isMute(void)
 	return (0);
 }
 
-t_time getIdle()
+time_t	Client::getIdle()const{
+	time_t now = std::time(NULL);
+	return (now - this->_last_activity);
+}
 
-set
+void	Client::setLastActivity(void){
+	time_t now = std::time(NULL);
+	this->_last_activity = now;
+}
