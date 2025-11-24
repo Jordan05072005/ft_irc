@@ -134,6 +134,11 @@ void Server::bindAndListen(sockaddr_in const& addr)
 	return ;
 }
 
+#include <cerrno>      // errno
+#include <netinet/tcp.h> // TCP_NODELAY, TCP_QUICKACK (Linux)
+#include <cstring>     // strerror si besoin
+
+
 // boucle infinie, serveur tournant
 void Server::run(void)
 {
@@ -161,7 +166,13 @@ void Server::run(void)
 			client_fd = accept(this->_fds[0].fd, (sockaddr*)&client_addr, &client_len); // renvoie le socket client et stocke ses données dans une struct
 			if (client_fd < 0)
 				throw std::runtime_error("Error: acceptance client socket connection");
-			fcntl(client_fd, F_SETFL, O_NONBLOCK); // fd/socket non bloquant
+			// int flag = 1;
+      //   if (setsockopt(client_fd, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag)) < 0)
+      //       std::perror("setsockopt(TCP_NODELAY)");
+			// if (setsockopt(client_fd, IPPROTO_TCP, TCP_QUICKACK, &flag, sizeof(flag)) < 0)
+			// 	std::perror("setsockopt(TCP_NODELAY)");
+			if (fcntl(client_fd, F_SETFL, O_NONBLOCK) < 0)
+				std::perror("fcntl(O_NONBLOCK)");
 			this->_clients.push_back(new Client(client_fd, client_addr, client_len)); // ajout des données client au tableau
 			this->_fds.push_back(init_pollfd(client_fd, POLLIN, 0)); // ajout socket client au tableau
 			this->_fds[0].revents = 0; // remise à défaut, évènement non actif
