@@ -24,6 +24,7 @@ class Client
 		socklen_t 	_len; // taille de sockaddr_in
 
 		std::string	_buff;
+		time_t	_last_interact;
 
 		std::string _nick;
 		std::string _ident;

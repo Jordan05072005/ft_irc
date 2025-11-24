@@ -185,7 +185,7 @@ void Server::run(void)
 		{
 			if (this->_fds[i].revents & POLLIN)
 			{
-				buf[0] = '\0';
+				std::memset(buf,0, sizeof(buf));
 				oct = recv(this->_fds[i].fd, buf, sizeof(buf), 0); // remplis le buffer en lisant sur le client socket, 0 parce que pas de flag
 				if (oct <= 0)
 				{

@@ -321,7 +321,7 @@ int		Server::checkJoin(Client& client, std::vector<std::string>& mess)
 	if (is_invite)
 		channel->delInvite(client);
 	// :Alice!~alice@host JOIN :#test (par tous users du channel et elle-même)
-	this->sendMessChannel(mess_cpy[1], mess_cpy[0], mess_cpy[1], 0, client);
+	this->sendMessChannel(mess_cpy[1], mess_cpy[0], mess_cpy[1], 1, client);
 	if (!channel->getTopic().topic.empty())
 	{
 		this->sendMessLocal("332", mess_cpy[1], client, channel->getTopic().topic);
@@ -545,13 +545,13 @@ int		Server::checkMode(Client& client, std::vector<std::string>& mess)
 		std::string	response;
 
 		// we skip MODE #channel
-		for (std::vector<std::string>::iterator it = mess_cpy.begin() + 2; it != mess_cpy.end(); it++)
+		for (std::vector<std::string>::iterator it = mess_cpy.begin(); it != mess_cpy.end(); it++)
 		{
-			if (it != mess_cpy.begin() + 2)
+			if (it != mess_cpy.begin())
 				response += ' ';
 			response += *it;
 		}
-		this->sendMessChannel(mess[1], mess[0] + " " + mess[1] + " " + response, "", 0, client);
+		this->sendMessChannel(mess[1], mess[0] + " " + mess[1] + " " + response, "", 1, client);
 	}
 	else
 	{
@@ -829,6 +829,39 @@ int		Server::checkWho(Client& client, std::vector<std::string>& mess)
 		}
 	}
 	return (0);
+}
+
+//whois
+int		Server::checkWho(Client& client, std::vector<std::string>& mess){
+	Client *c;
+	if (mess.size() == 1)
+		return (this->sendMessLocal("431", mess[0], client, "No nickname given") , 0);
+	if (!this->checkExistClient(mess[1]))
+		return (this->sendMessLocal("401", mess[1], client, "No such nick") , 0);
+	c = this->getClient(mess[1]);
+	this->sendMessLocal("311", c->getNick() + " ~" + c->getIdent() + " " + c->getHost() + " * " , client, c->getRealName());
+	this->sendMessLocal("312", c->getNick() + " " + c->getHost() + " " , client, "IRC42 Server");
+// 3️⃣ RPL_WHOISIDLE — 317
+// :irc.example.com 317 <requester> <nickname> <seconds idle> :seconds idle
+
+
+// <seconds idle> → temps depuis la dernière activité du client en secondes
+
+// 4️⃣ RPL_WHOISCHANNELS — 319
+// :irc.example.com 319 <requester> <nickname> :<channel list>
+
+
+// <channel list> → canaux dans lesquels l’utilisateur est actuellement connecté, séparés par des espaces
+
+// 5️⃣ RPL_ENDOFWHOIS — 318
+// :irc.example.com 318 <requester> <nickname> :End of WHOIS list
+
+
+// Terminer la réponse WHOIS, obligatoire
+
+// <nickname> → pseudo interrogé
+
+	
 }
 
 int		Server::checkHelp(Client& client, std::vector<std::string>& mess)

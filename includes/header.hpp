@@ -14,6 +14,7 @@
 # include <vector>
 # include <map>
 # include <string>
+# include <cstring>
 # include <sstream>
 # include <ctime>
 # include <signal.h>

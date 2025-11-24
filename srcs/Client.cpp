@@ -208,3 +208,7 @@ bool	Client::isMute(void)
 	}
 	return (0);
 }
+
+t_time getIdle()
+
+set

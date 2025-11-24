@@ -32,7 +32,7 @@ void Bot::readFile(){
 	std::string buf;
 	int bytesRead;
 	char buff[1024];
-	int fd = open("ressources/badWord.txt", O_RDONLY);
+	int fd = open("resources/badWord.txt", O_RDONLY);
 	if (fd == -1)
 		return ;
 	while ((bytesRead = read(fd, buff, sizeof(buff))) > 0)

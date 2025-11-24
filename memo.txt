@@ -42,3 +42,8 @@ Hexchat commande:
 Correction:
 	Ctrl z -> stopped progra
 	fg %{occurence} -> recup le programme
+
+
+Mode :
+	MODE #t +i
+:jo!~e@127.0.0.1 MODE #t
