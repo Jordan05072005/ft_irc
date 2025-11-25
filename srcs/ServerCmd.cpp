@@ -361,7 +361,7 @@ MODE #channel ++ => renvoie rien
 MODE #channel ++i => interprété comme +i
 MODE #channel +-i => interprété comme -i
 MODE #channel +t+-i => interprété comme +t et -i
-MODE #channel poulain => interprété comme modestring +poulain => erreur unknown mode 'p'
+MODE #channel poulain => ignoré
 MODE #channel +i <arg> => arg ignoré
 MODE #channel +i +t +k secret poulain +l 10 +o <client> cage => poulain et cage ignorés
 MODE #channel +kti secret poulain +l 10 +o <client> cage => poulain et cage ignorés
@@ -384,7 +384,7 @@ int		Server::checkMode(Client& client, std::vector<std::string>& mess)
 			{
 				// separate modestring
 				std::vector<std::string>	tmp;
-				char						what;
+				std::string					what;
 				std::string					mode;
 				for (size_t i = 0; i < (*it).size(); i++)
 				{
@@ -418,12 +418,14 @@ int		Server::checkMode(Client& client, std::vector<std::string>& mess)
 			return (this->sendMessLocal("482", mess[1], client, "You're not channel operator"), 0);
 
 		// execute MODE
+		std::vector<std::string>	done;
 		for (std::vector<std::string>::iterator it = parameters.begin(); it != parameters.end(); it++)
 		{
-			if (((*it)[0] == '+' || (*it)[0] == '-') && std::string("itklo").find((*it)[0]) != 1)
+			if ((*it)[0] == '+' || (*it)[0] == '-')
 			{
 				std::vector<std::string>::iterator	arg;
 				bool								is_arg = false;
+				bool								is_err = false;
 
 				// does mode need arg ?
 				if ((*it) == "+k" || (*it) == "+l" || (*it) == "+o" || (*it) == "-o")
@@ -434,7 +436,10 @@ int		Server::checkMode(Client& client, std::vector<std::string>& mess)
 							break;
 					}
 					if (arg == parameters.end())
-						return (this->sendMessLocal("461", mess[0], client, "Not enough parameters"), 0);
+					{
+						is_err = true;
+						this->sendMessLocal("461", mess[0], client, "Not enough parameters");
+					}
 					else
 						is_arg = true;
 				}
@@ -444,25 +449,46 @@ int		Server::checkMode(Client& client, std::vector<std::string>& mess)
 					channel->setOptInviteOnly(true);
 				else if (*it == "+t")
 					channel->setOptRestrictTopic(true);
-				else if (*it == "+k")
+				else if (is_err == false && *it == "+k")
 				{
 					if (channel->getOptChannelKey() == true && *arg == channel->getChannelKey())
-						return (this->sendMessLocal("467", mess[1], client, "Channel key already set"), 0);
-					channel->setOptChannelKey(true);
-					channel->setChannelKey(*arg);
+					{
+						is_err = true;
+						this->sendMessLocal("467", mess[1], client, "Channel key already set");
+					}
+					else
+					{
+						channel->setOptChannelKey(true);
+						channel->setChannelKey(*arg);
+					}
 				}
-				else if (*it == "+l")
+				else if (is_err == false && *it == "+l")
 				{
-					channel->setOptUserLimit(true);
 					if (!is_userlimit_ok(*arg))
-						return (this->sendMessLocal("461", mess[0], client, "Not enough parameters"), 0);
-					channel->setUserLimit(std::atoi((*arg).c_str()));
+					{
+						is_err = true;
+						this->sendMessLocal("461", mess[0], client, "Not enough parameters");
+					}
+					else
+					{
+						channel->setOptUserLimit(true);
+						channel->setUserLimit(std::atoi((*arg).c_str()));
+					}
 				}
-				else if (*it == "+o")
+				else if (is_err == false && *it == "+o")
 				{
-					if (!channel->checkUser(*arg))
-						return (this->sendMessLocal("441", *arg + " " + mess[1], client, "They aren't on that channel"), 0);
-					channel->addOperator(this->getClient(*arg));
+					if (!this->checkExistClient(*arg))
+					{
+						is_err = true;
+						this->sendMessLocal("401", *arg, client, "No such nick/channel");
+					}
+					if (is_err == false && !channel->checkUser(*arg))
+					{
+						is_err = true;
+						this->sendMessLocal("441", *arg + " " + mess[1], client, "They aren't on that channel");
+					}
+					else if (is_err == false && !channel->checkOperator(*arg))
+						channel->addOperator(this->getClient(*arg));
 				}
 				else if (*it == "-i")
 					channel->setOptInviteOnly(false);
@@ -478,29 +504,45 @@ int		Server::checkMode(Client& client, std::vector<std::string>& mess)
 					channel->setOptUserLimit(false);
 					channel->setUserLimit(0);
 				}
-				else if (*it == "-o")
+				else if (is_err == false && *it == "-o")
 				{
-					if (!channel->checkUser(*arg))
-						return (this->sendMessLocal("441", *arg + " " + mess[1], client, "They aren't on that channel"), 0);
-					channel->removeOperator(*arg);
+					if (!this->checkExistClient(*arg))
+					{
+						is_err = true;
+						this->sendMessLocal("401", *arg, client, "No such nick/channel");
+					}
+					if (is_err == false && !channel->checkUser(*arg))
+					{
+						is_err = true;
+						this->sendMessLocal("441", *arg + " " + mess[1], client, "They aren't on that channel");
+					}
+					else if (is_err == false && channel->checkOperator(*arg))
+						channel->removeOperator(*arg);
 				}
-				if (is_arg)
-					parameters.erase(arg);
-			}
-			else
-			{
-				size_t	i;
-				for (i = 0; i < (*it).size(); i++)
+				else
 				{
-					if (std::isdigit((*it)[i]))
-						break ;
-				}
-				if (i != (*it).size())
+					size_t i;
+					for (i = 0; i < (*it).size(); i++)
+					{
+						if (std::isalpha((*it)[i]))
+							break ;
+					}
 					this->sendMessLocal("472", (*it).substr(i, 1), client, "is unknown mode char to me");
-				parameters.erase(it, parameters.end());
-				break ;
+				}
+
+				if (is_err == false)
+					done.push_back(*it);
+				if (is_arg)
+				{
+					if (is_err == false)
+						done.push_back(*arg);
+					parameters.erase(arg);
+				}
 			}
 		}
+
+		if (done.empty())
+			return (0);
 
 		// construct response for client
 		std::vector<std::string>	order;
@@ -517,39 +559,34 @@ int		Server::checkMode(Client& client, std::vector<std::string>& mess)
 		order.push_back("-o");
 
 		mess_cpy.clear();
-		for (std::vector<std::string>::iterator ito = order.begin(); ito != order.end(); ito++)
+		for (std::vector<std::string>::iterator ito = order.begin(); ito != order.end(); ++ito)
 		{
-			for (std::vector<std::string>::iterator itp = parameters.begin(); itp != parameters.end(); itp++)
+			for (std::vector<std::string>::iterator itd = done.begin(); itd != done.end(); ++itd)
 			{
-				if (*itp == *ito)
+				if (*itd == *ito)
 				{
-					if (mess_cpy.size() > 2)
-						mess_cpy[2] = add_to_modestring(mess_cpy[2], *itp);
+					if (mess_cpy.size() >= 1)
+						mess_cpy[0] = add_to_modestring(mess_cpy[0], *itd);
 					else
-						mess_cpy.push_back(*itp);
-					if ((*itp) == "+k" || (*itp) == "+l" || (*itp) == "+o" || (*itp) == "-o")
+						mess_cpy.push_back(*itd);
+					if ((*itd) == "+k" || (*itd) == "+l" || (*itd) == "+o" || (*itd) == "-o")
 					{
-						std::vector<std::string>::iterator arg;
-						for (arg = itp; arg != parameters.end(); arg++)
-						{
-							if ((*arg)[0] != '+' && (*arg)[0] != '-')
-								break;
-						}
-						mess_cpy.push_back(*arg);
-						parameters.erase(arg);
+						mess_cpy.push_back(*(itd + 1));
+						done.erase(itd + 1);
 					}
+					break ;
 				}
 			}
 		}
 
-		std::string	response;
+		std::string	response = "";
 
 		// we skip MODE #channel
-		for (std::vector<std::string>::iterator it = mess_cpy.begin(); it != mess_cpy.end(); it++)
+		for (std::vector<std::string>::iterator itm = mess_cpy.begin(); itm != mess_cpy.end(); itm++)
 		{
-			if (it != mess_cpy.begin())
+			if (itm != mess_cpy.begin())
 				response += ' ';
-			response += *it;
+			response += *itm;
 		}
 		this->sendMessChannel(mess[1], mess[0] + " " + mess[1] + " " + response, "", 1, client);
 	}
@@ -726,8 +763,10 @@ int		Server::checkPrivmsg(Client& client, std::vector<std::string>& mess)
 		client.addWarn();
 		return (sendMessBot(*this->_bot[0], client, "NOTICE", this->_bot[0]->getMessBadWords()), 0);
 	}
-	for (size_t i = 0; i < this->_cmd.size(); i++){
-		if (message == this->_cmd[i].name){
+	for (size_t i = 0; i < this->_cmd.size(); i++)
+	{
+		if (message == this->_cmd[i].name)
+		{
 			mess_cpy = mess;
 			mess_cpy.erase(mess_cpy.begin(), mess_cpy.begin() + 2);
 			return((this->*(_cmd[i].pars))(client, mess_cpy));

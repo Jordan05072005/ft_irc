@@ -58,11 +58,11 @@ class Client
 		void	 				setHost(std::string& host);
 		std::string const&		getServ(void) const;
 		void	 				setServ(std::string& host);
-		time_t	getIdle() const;
-		void	setLastActivity(void);
-
+		time_t					getIdle(void) const;
+		void					setLastActivity(void);
+	
 		std::vector<Channel*>&	getChannels(void);
-		std::string	getChannelsList();
+		std::string				getChannelsList();
 		void					addChannel(Channel* channel);
 		void					removeChannel(std::string const& name);
 		void					removeAllChannels(void);

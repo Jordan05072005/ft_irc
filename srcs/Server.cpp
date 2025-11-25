@@ -194,8 +194,7 @@ void Server::run(void)
 					continue; // revient au début de boucle for
 				}
 				this->_clients[i - 1]->addBuf(buf, oct);
-				// this->_clients[i - 1]->getBuf().find("\r\n") != std::string::npos && 
-				if (this->_clients[i - 1]->getBuf().find("\n") != std::string::npos && this->requestHandler(*(this->_clients[i - 1])))
+				if (this->_clients[i - 1]->getBuf().find("\r\n") != std::string::npos && this->requestHandler(*(this->_clients[i - 1])))
 				{
 					this->delClient(i--);
 					continue;

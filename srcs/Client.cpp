@@ -132,7 +132,8 @@ std::vector<Channel*>&	Client::getChannels(void)
 	return (this->_channel);
 }
 
-std::string Client::getChannelsList(){
+std::string	Client::getChannelsList(void)
+{
 	std::string str;
 
 	for (size_t i = 0; i < this->_channel.size(); ++i)
@@ -225,12 +226,14 @@ bool	Client::isMute(void)
 	return (0);
 }
 
-time_t	Client::getIdle()const{
+time_t	Client::getIdle(void) const
+{
 	time_t now = std::time(NULL);
 	return (now - this->_last_activity);
 }
 
-void	Client::setLastActivity(void){
+void	Client::setLastActivity(void)
+{
 	time_t now = std::time(NULL);
 	this->_last_activity = now;
 }
