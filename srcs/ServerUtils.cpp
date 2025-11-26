@@ -113,15 +113,15 @@ Client&	Server::getClient(std::string const& nick)
 /*-----------------------------------------------------------------------------------------------*/
 
 
-// supprime le client et son socket de partout
+// delete client and its data everywhere
 void Server::delClient(int index)
 {
 	Client*	tmp = this->_clients[index - 1];
 
-	close(this->_clients[index - 1]->getFd()); // ferme client socket
-	this->_clients.erase(this->_clients.begin() + (index - 1)); // retire le client du gestionnaire
+	close(this->_clients[index - 1]->getFd()); // close client's socket
+	this->_clients.erase(this->_clients.begin() + (index - 1)); // erase client of array
 	delete tmp;
-	this->_fds.erase(this->_fds.begin() + index); // retire le client socket des sockets actifs
+	this->_fds.erase(this->_fds.begin() + index); // erase client's socket of array
 	
 	return ;
 }
@@ -163,7 +163,6 @@ void	Server::delAllChannelClient(Client& client, std::string& cmd, std::string m
 	{
 		this->_channel[i]->removeUser(client.getNick());
 		this->_channel[i]->removeOperator(client.getNick());
-		// this->sendMessChannel((*it)->getName(), (*it)->getName(), cmd, mess, client);
 		if (this->_channel[i]->getUsers().size() == 0)
 		{
 			delete this->_channel[i];

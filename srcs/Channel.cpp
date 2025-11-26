@@ -1,5 +1,6 @@
 #include "../includes/header.hpp"
 
+
 Channel::Channel(void){}
 
 Channel::Channel(Channel const& copy)

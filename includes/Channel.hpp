@@ -51,7 +51,6 @@ class Channel
 
 		std::time_t const&				getCreationTime(void) const;
 		std::string const&				getName(void) const;
-		//void							setName(Client const& by, std::string const& name); //? besoin/possibilité de rename
 
 		t_topic const&					getTopic(void) const;
 		void							setTopic(const std::string& topic, const std::string& nick);

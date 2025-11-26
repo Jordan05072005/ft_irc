@@ -20,8 +20,8 @@ class Client
 		Client& operator=(const Client& cpy); // canonical
 
 		int 		_fd; // client socket
-		sockaddr_in _addr; // données du client récupérées liées au socket client
-		socklen_t 	_len; // taille de sockaddr_in
+		sockaddr_in _addr; // connection's option's data
+		socklen_t 	_len; // sockaddr_in size
 
 		std::string	_buff;
 		time_t	_last_activity;

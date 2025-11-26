@@ -9,8 +9,8 @@ int Server::errorState(int state, std::string const& cmd, Client& client)
 		this->sendMessLocal("451", cmd, client, "You have not registered");
 	return (0);
 }
-//:ft_irc 451 JOIN :You have not registered
 
+//:ft_irc 451 JOIN :You have not registered
 void Server::sendMessLocal(std::string const& err, std::string const& cmd, Client const& c, std::string const& body)
 {
 	std::string err_mess;
@@ -66,7 +66,7 @@ void Server::sendMessGlobal(std::string const& cmd, std::string const& mess, Cli
 	return ;
 }
 
-// Alice JOIN :#général
+// Alice JOIN :#general
 void Server::sendMessChannel(std::string const& channel, std::string const& argm, std::string const& mess, int sendme , Client& c)
 {
 	std::stringstream ss;

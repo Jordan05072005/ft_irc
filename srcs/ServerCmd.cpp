@@ -23,7 +23,6 @@ int	Server::checkCap(Client& client, std::vector<std::string>& mess)
 	return 0;
 }
 
-// vérification du mdp
 int Server::checkPass(Client& client, std::vector<std::string>& mess)
 {
 	std::string err;
@@ -59,7 +58,7 @@ int Server::checkUser(Client& client, std::vector<std::string>& mess)
 
 	if ((!client.getRealName().empty() || !client.getIdent().empty()) && client.getState() >= 2)
 		return (this->sendMessLocal("462", "", client, "Unauthorized command (already registered)"), 0);
-	if (mess.size() < 5) // TODO : reduire a 1 if
+	if (mess.size() < 5)
 		return (this->sendMessLocal("461", "", client, "Not enough parameters"), 0);
 	if (mess[4][0] != ':')
 		return (this->sendMessLocal("461", "", client, "Not enough parameters"), 0);
@@ -93,11 +92,13 @@ int Server::checkQuit(Client& client, std::vector<std::string>& mess)
 	this->delAllChannelClient(client, mess[0], message);
 	if (client.getState() < 2)
 		return (1);
-	//this->sendMessGlobal(mess[0], message, client);
 	return (1);
 }
 
 //KICK <channel> <user> [<comment>]
+// :<kicker_nick>!<user>@<host> KICK <channel> <target_nick> :<comment>
+// :Alice!~alice@127.0.0.1 KICK #42school johon :Too much spam
+// :server 461 <nick> KICK :Not enough parameters
 int	Server::checkKick(Client& client, std::vector<std::string>& mess)
 {
 	std::string message;
@@ -138,9 +139,6 @@ int	Server::checkKick(Client& client, std::vector<std::string>& mess)
 	this->getClient(mess[2]).removeChannel(mess[1]);
 	return (0);
 }
-// :<kicker_nick>!<user>@<host> KICK <channel> <target_nick> :<comment>
-// :Alice!~alice@127.0.0.1 KICK #42school johon :Trop de spam
-// :server 461 <nick> KICK :Not enough parameters
 
 //INVITE <nickname> <channel>
 int Server::checkInvite(Client& client, std::vector<std::string>& mess)
@@ -220,6 +218,7 @@ static int	is_name_ok(std::string const& name)
 }
 
 // JOIN [#channel,&channel] [key,key]
+// :Alice!~alice@host JOIN :#test
 int		Server::checkJoin(Client& client, std::vector<std::string>& mess)
 {
 	if (mess.size() < 2 || mess.size() > 3)
@@ -320,7 +319,6 @@ int		Server::checkJoin(Client& client, std::vector<std::string>& mess)
 
 	if (is_invite)
 		channel->delInvite(client);
-	// :Alice!~alice@host JOIN :#test (par tous users du channel et elle-même)
 	this->sendMessChannel(mess_cpy[1], mess_cpy[0], mess_cpy[1], 1, client);
 	if (!channel->getTopic().topic.empty())
 	{
@@ -345,26 +343,26 @@ static bool	is_userlimit_ok(std::string const& str)
 }
 
 /*
-MODE #channel => demande, réponse : 
+MODE #channel => request, response : 
 	:irc.local.net 324 Alice #channel +itk secret
 	:irc.local.net 329 Alice #channel 1730910842
 
 --- CLASSIC ---
-MODE #channel +itklo secret 10 <client> => demande, réponse toujours sous cette forme
-MODE #channel +itkl-o secret 10 <client> => demande, réponse toujours sous cette forme
+MODE #channel +itklo secret 10 <client> => request, response always in this syntax
+MODE #channel +itkl-o secret 10 <client> => request, response always in this syntax
 MODE #channel +i +t +k secret +l 10 +o <client> => demande
 MODE #channel +i +t +kl secret 10 +o <client> => demande
 MODE #channel -option <client> => demande
 
 --- UNUSUAL ---
-MODE #channel ++ => renvoie rien
-MODE #channel ++i => interprété comme +i
-MODE #channel +-i => interprété comme -i
-MODE #channel +t+-i => interprété comme +t et -i
-MODE #channel poulain => ignoré
-MODE #channel +i <arg> => arg ignoré
-MODE #channel +i +t +k secret poulain +l 10 +o <client> cage => poulain et cage ignorés
-MODE #channel +kti secret poulain +l 10 +o <client> cage => poulain et cage ignorés
+MODE #channel ++ => do nothing
+MODE #channel ++i => understood like +i
+MODE #channel +-i => understood like -i
+MODE #channel +t+-i => understood like +t et -i
+MODE #channel poulain => ignored
+MODE #channel +i <arg> => arg ignored
+MODE #channel +i +t +k secret poulain +l 10 +o <client> cage => poulain and cage ignored
+MODE #channel +kti secret poulain +l 10 +o <client> cage => poulain and cage ignored
 */
 int		Server::checkMode(Client& client, std::vector<std::string>& mess)
 {
@@ -725,6 +723,14 @@ int		Server::checkList(Client& client, std::vector<std::string>& mess)
 			}
 			mess_cpy[1] = mess_cpy[1].substr(mess_cpy[1].find(',') + 1);
 		}
+		if (this->checkExistChannel(mess_cpy[1]))
+		{
+			channel = this->_channel[this->getIndexChannel(mess_cpy[1])];
+			if (channel->getTopic().topic.empty())
+				this->sendMessLocal("322", channel->getName() + " " + channel->getUsersCountStr(), client, " ");
+			else
+				this->sendMessLocal("322", channel->getName() + " " + channel->getUsersCountStr(), client, channel->getTopic().topic);
+		}
 	}
 	else
 	{
@@ -870,7 +876,27 @@ int		Server::checkWho(Client& client, std::vector<std::string>& mess)
 	return (0);
 }
 
-// whois
+/*
+	3️⃣ RPL_WHOISIDLE — 317
+	:irc.example.com 317 <requester> <nickname> <seconds idle> :seconds idle
+
+
+	<seconds idle> → temps depuis la dernière activité du client en secondes
+
+	4️⃣ RPL_WHOISCHANNELS — 319
+	:irc.example.com 319 <requester> <nickname> :<channel list>
+
+
+	<channel list> → canaux dans lesquels l’utilisateur est actuellement connecté, séparés par des espaces
+
+	5️⃣ RPL_ENDOFWHOIS — 318
+	:irc.example.com 318 <requester> <nickname> :End of WHOIS list
+
+
+	Terminer la réponse WHOIS, obligatoire
+
+	<nickname> → pseudo interrogé
+*/
 int		Server::checkWhois(Client& client, std::vector<std::string>& mess){
 	Client *c;
 	std::stringstream ss;
@@ -885,29 +911,7 @@ int		Server::checkWhois(Client& client, std::vector<std::string>& mess){
 	this->sendMessLocal("317", ss.str(), client, "seconds idle");
 	this->sendMessLocal("319", c->getNick() , client, c->getChannelsList());
 	this->sendMessLocal("318", c->getNick() , client, "End of WHOIS list");
-	return 0;
-
-// 3️⃣ RPL_WHOISIDLE — 317
-// :irc.example.com 317 <requester> <nickname> <seconds idle> :seconds idle
-
-
-// <seconds idle> → temps depuis la dernière activité du client en secondes
-
-// 4️⃣ RPL_WHOISCHANNELS — 319
-// :irc.example.com 319 <requester> <nickname> :<channel list>
-
-
-// <channel list> → canaux dans lesquels l’utilisateur est actuellement connecté, séparés par des espaces
-
-// 5️⃣ RPL_ENDOFWHOIS — 318
-// :irc.example.com 318 <requester> <nickname> :End of WHOIS list
-
-
-// Terminer la réponse WHOIS, obligatoire
-
-// <nickname> → pseudo interrogé
-
-	
+	return 0;	
 }
 
 int		Server::checkHelp(Client& client, std::vector<std::string>& mess)

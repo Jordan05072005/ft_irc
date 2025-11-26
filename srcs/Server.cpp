@@ -91,32 +91,34 @@ void Server::closeAll(void)
 /*-----------------------------------------------------------------------------------------------*/
 
 
-// initialisation de struct pollfd pour chaque socket
+// intit struct pollfd for each socket
 static pollfd init_pollfd(int fd, short events, short revents)
 {
 	pollfd p;
 
-	p.fd = fd; // fd ouvert par le socket
-	p.events = events; // évènements à surveiller, POLLIN = true/false if must read in fd
-	p.revents = revents; // activation ou non des évènements, le kernell le remplie, 0 par défaut
+	p.fd = fd; // socket
+	p.events = events; // event to look at, POLLIN = true/false if must read in fd
+	p.revents = revents; // event activation true/false, filled by kernell, 0 is default
 
 	return (p);
 }
 
-// création socket de base pour connexions client
+// ceating base socket to receive client's connections
 void Server::initServ(void)
 {
 	int opt = 1; //? pk 1
 
-	this->_fds.push_back(init_pollfd(socket(AF_INET, SOCK_STREAM, 0), POLLIN, 0)); // socket(ipv4, SOCK_STREAM = oblige listen et accept, Protocole par défaut TCP)
+	this->_fds.push_back(init_pollfd(socket(AF_INET, SOCK_STREAM, 0), POLLIN, 0)); // socket(ipv4, SOCK_STREAM <=> must listen and accept, TCP is default)
 	if (this->_fds[0].fd == -1)
 		throw std::runtime_error("Error: server socket creation");
-	this->_addr.sin_family = AF_INET; // config pour ipv4
-	this->_addr.sin_port = htons(this->_port_serv); // convertis le port pour la struct
-	this->_addr.sin_addr.s_addr = INADDR_ANY; // connexion possible à partir de toutes interfaces de la machine herbergeant le serv
-	fcntl(this->_fds[0].fd, F_SETFL, O_NONBLOCK); // fd/socket non bloquant
 
-	// peut reutiliser le port pris sur toutes interfaces (données du socket) immediatement si serv crash sans fermer socket
+	// setting connection's options
+	this->_addr.sin_family = AF_INET; // ipv4
+	this->_addr.sin_port = htons(this->_port_serv); // convert port for struct addr
+	this->_addr.sin_addr.s_addr = INADDR_ANY; // connection free for every machine's interfaces hosting the server
+	fcntl(this->_fds[0].fd, F_SETFL, O_NONBLOCK); // fd/socket non blocking
+
+	// reuse free of port after server's crash for every interfaces used
 	setsockopt(this->_fds[0].fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
 	this->bindAndListen(this->_addr);
@@ -124,48 +126,43 @@ void Server::initServ(void)
 	return ;
 }
 
-// association données du socket au socket en lui-même
-// puis mise sur écoute du socket
+// binding of connection's options to socket
+// then putting socket on listen
 void Server::bindAndListen(sockaddr_in const& addr)
 {
 	if (bind(this->_fds[0].fd, (sockaddr*)&addr, sizeof(addr)) < 0)
 		throw std::runtime_error("Error: binding server socket");
-	if (listen(this->_fds[0].fd, SOMAXCONN) < 0) // SOMAXCONN = taille max file d'attente
+	if (listen(this->_fds[0].fd, SOMAXCONN) < 0) // SOMAXCONN = size max of waiting list
 		throw std::runtime_error("Error: listening on server socket");
 
 	return ;
 }
 
-#include <cerrno>      // errno
-#include <netinet/tcp.h> // TCP_NODELAY, TCP_QUICKACK (Linux)
-#include <cstring>     // strerror si besoin
-
-
-// boucle infinie, serveur tournant
+// running server
 void Server::run(void)
 {
 	int					err;
 
-	sockaddr_in			client_addr; // données du client récupérées liées au socket client
+	sockaddr_in			client_addr; // client's connection's options
 	socklen_t			client_len = sizeof(client_addr);
-	int 				client_fd; // socket client
+	int 				client_fd; // client socket
 
 	char 				buf[512];
-	int 				oct; // nombre d'octets lus renvoyés par recv
+	int 				oct; // nb of octet read by recv
 
 	this->_bot.push_back(new Bot("bot42", "bot42", "bot42"));
 	while (!this->_close)
 	{
 		setup_signals();
-		err = poll(this->_fds.data(), this->_fds.size(), -1); // poll(pointeur sur tableau, taille tableau, timeout)
+		err = poll(this->_fds.data(), this->_fds.size(), -1); // poll(pointer to array, size of array, timeout)
 		if (err < 0 && !this->_close)
 			throw std::runtime_error("Error: poll");
 		this->delInvite();
 
-		// traitement server socket
-		if (this->_fds[0].revents & POLLIN) // & opération binaire, indique si le flag POLLIN est "activé", renvoie 0 ou POLLIN
+		// managing entering connections
+		if (this->_fds[0].revents & POLLIN) // & is binary operator, 0 or POLLIN
 		{
-			client_fd = accept(this->_fds[0].fd, (sockaddr*)&client_addr, &client_len); // renvoie le socket client et stocke ses données dans une struct
+			client_fd = accept(this->_fds[0].fd, (sockaddr*)&client_addr, &client_len); // give new socket for new client and fill connection's options of client socket in struct
 			if (client_fd < 0)
 				throw std::runtime_error("Error: acceptance client socket connection");
 			// int flag = 1;
@@ -175,23 +172,23 @@ void Server::run(void)
 			// 	std::perror("setsockopt(TCP_NODELAY)");
 			if (fcntl(client_fd, F_SETFL, O_NONBLOCK) < 0)
 				std::perror("fcntl(O_NONBLOCK)");
-			this->_clients.push_back(new Client(client_fd, client_addr, client_len)); // ajout des données client au tableau
-			this->_fds.push_back(init_pollfd(client_fd, POLLIN, 0)); // ajout socket client au tableau
-			this->_fds[0].revents = 0; // remise à défaut, évènement non actif
+			this->_clients.push_back(new Client(client_fd, client_addr, client_len)); // add of client's socket's data to array
+			this->_fds.push_back(init_pollfd(client_fd, POLLIN, 0)); // add client's open socket to array of sockets to manage
+			this->_fds[0].revents = 0; // put to default
 			std::cout << "New client, fd : " << client_fd << std::endl;
 		}
 
-		// traitement client sockets
+		// managing client's received data
 		for (size_t i = 1; i < this->_fds.size(); i++)
 		{
 			if (this->_fds[i].revents & POLLIN)
 			{
 				std::memset(buf,0, sizeof(buf));
-				oct = recv(this->_fds[i].fd, buf, sizeof(buf), 0); // remplis le buffer en lisant sur le client socket, 0 parce que pas de flag
+				oct = recv(this->_fds[i].fd, buf, sizeof(buf), 0); // 0 is no flag
 				if (oct <= 0)
 				{
-					this->delClient(i--); // envoie i puis enlève 1
-					continue; // revient au début de boucle for
+					this->delClient(i--);
+					continue; // beginning of for
 				}
 				this->_clients[i - 1]->addBuf(buf, oct);
 				if (this->_clients[i - 1]->getBuf().find("\r\n") != std::string::npos && this->requestHandler(*(this->_clients[i - 1])))
@@ -199,17 +196,17 @@ void Server::run(void)
 					this->delClient(i--);
 					continue;
 				}
-				this->_fds[i].revents = 0; // remise à défaut, évènement non actif
+				this->_fds[i].revents = 0;
 			}
-			else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL))
-				this->delClient(i--);// envoyer un QUIT a tt les autres client,
+			else if (this->_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) // ? à remplir
+				this->delClient(i--);
 		}
 	}
 	this->closeAll();
 	return ;
 }
 
-// gestion des données reçues
+// received data handler
 int Server::requestHandler(Client& client)
 {
 	int err;

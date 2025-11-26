@@ -3,28 +3,30 @@
 
 # include "header.hpp"
 
-class Bot {
+class Bot
+{
 	private:
-		std::vector<std::string> _badWords;
-		std::string _nick;
-		std::string _ident;
-		std::string _realname;
-		std::string _messBadWords;
-		std::string _messMute;
+		std::vector<std::string>	_badWords;
+		std::string					_nick;
+		std::string 				_ident;
+		std::string 				_realname;
+		std::string 				_messBadWords;
+		std::string 				_messMute;
 
 	public:
-		Bot();
+		Bot(void); // canonical
 		Bot(std::string nick, std::string ident, std::string realname);
-		Bot(const Bot& other);
-		Bot& operator=(const Bot& other);
-		~Bot();
+		Bot(const Bot& copy); // canonical
+		Bot& operator=(const Bot& other); // canonical
+		~Bot(void); // canonical
 
-		bool	checkMessage(const std::string& message);
-		void	readFile();
-		const std::string& getMessBadWords() const;
-		const std::string& getMessMute() const;
-		const std::string& getNick() const;
-		const std::string& getIdent() const;
+		bool				checkMessage(const std::string& message);
+		void				readFile(void);
+	
+		const std::string&	getMessBadWords(void) const;
+		const std::string&	getMessMute(void) const;
+		const std::string&	getNick(void) const;
+		const std::string&	getIdent(void) const;
 };
 
 #endif
