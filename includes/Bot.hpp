@@ -24,6 +24,7 @@ class Bot
 		void				readFile(void);
 	
 		const std::string&	getMessBadWords(void) const;
+		const std::string&	getMessSpam(void) const;
 		const std::string&	getMessMute(void) const;
 		const std::string&	getNick(void) const;
 		const std::string&	getIdent(void) const;

@@ -184,7 +184,9 @@ int Server::checkTopic(Client& client, std::vector<std::string>& mess)
 		return (this->sendMessLocal("442", mess[1], client, "You're not on that channel"), 0);
 	if (channel->getOptRestrictTopic()
 		&& !channel->checkOperator(client.getNick()))
-		return (this->sendMessLocal("482", mess[2], client, "You're not channel operator"), 0);
+		return (this->sendMessLocal("482", mess[1], client, "You're not channel operator"), 0);
+	std::cout << "fuck ? " << std::endl;
+
 	if (mess.size() == 2)
 	{
 		if (channel->getTopic().topic.empty())
@@ -760,7 +762,12 @@ int		Server::checkPrivmsg(Client& client, std::vector<std::string>& mess)
 	if (mess.size() < 3 || mess[2][0] != ':' || mess[2].size() == 1)
 		return (this->sendMessLocal("412", "", client, "No text to send"), 0);
 	if (client.isMute())
-			return (sendMessBot(*this->_bot[0], client, "NOTICE", this->_bot[0]->getMessMute()), 0);
+		return (sendMessBot(*this->_bot[0], client, "NOTICE", this->_bot[0]->getMessMute()), 0);
+	if (client.getIdle() < 1){
+		std::cout << "spam bro" << std::endl;
+		client.addWarn();
+		return (sendMessBot(*this->_bot[0], client, "NOTICE", this->_bot[0]->getMessSpam()), 0);
+	}
 	argm = split(mess[1], ',');
 	mess[2].erase(0, 1);
 	for (size_t i = 2; i < mess.size(); i++)
@@ -905,13 +912,13 @@ int		Server::checkWhois(Client& client, std::vector<std::string>& mess){
 	if (!this->checkExistClient(mess[1]))
 		return (this->sendMessLocal("401", mess[1], client, "No such nick") , 0);
 	c = &this->getClient(mess[1]);
-	this->sendMessLocal("311", c->getNick() + " ~" + c->getIdent() + " " + c->getHost() + " * " , client, c->getRealName());
-	this->sendMessLocal("312", c->getNick() + " " + c->getHost() + " " , client, "IRC42 Server");
+	this->sendMessLocal("311", c->getNick() + " ~" + c->getIdent() + " " + c->getHost() + " *" , client, c->getRealName());
+	this->sendMessLocal("312", c->getNick() + " " + c->getHost(), client, "IRC42 Server");
 	ss << c->getNick() << " " << c->getIdle();
 	this->sendMessLocal("317", ss.str(), client, "seconds idle");
 	this->sendMessLocal("319", c->getNick() , client, c->getChannelsList());
 	this->sendMessLocal("318", c->getNick() , client, "End of WHOIS list");
-	return 0;	
+	return 0;
 }
 
 int		Server::checkHelp(Client& client, std::vector<std::string>& mess)

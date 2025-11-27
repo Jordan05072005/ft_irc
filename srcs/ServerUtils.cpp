@@ -117,8 +117,10 @@ Client&	Server::getClient(std::string const& nick)
 void Server::delClient(int index)
 {
 	Client*	tmp = this->_clients[index - 1];
+	std::string cmd = "QUIT";
 
-	close(this->_clients[index - 1]->getFd()); // close client's socket
+	this->delAllChannelClient(*tmp, cmd, "Client Quit");
+	close(tmp->getFd()); // close client's socket
 	this->_clients.erase(this->_clients.begin() + (index - 1)); // erase client of array
 	delete tmp;
 	this->_fds.erase(this->_fds.begin() + index); // erase client's socket of array
@@ -157,8 +159,6 @@ void	Server::delAllChannelClient(Client& client, std::string& cmd, std::string m
 			}
 		}
 	}
-	std::cout << "mid" << std::endl;
-	std::cout << c.size() << std::endl;
 	for (size_t i = 0; i < this->_channel.size(); i++)
 	{
 		this->_channel[i]->removeUser(client.getNick());
