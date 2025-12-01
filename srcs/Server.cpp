@@ -232,7 +232,6 @@ int Server::requestHandler(Client& client)
 				}
 				else if ((err = (this->*(_cmd[i].pars))(client, mess)))
 					return (1);
-				client.setLastActivity();
 			}
 		}
 		if (err == -1)
