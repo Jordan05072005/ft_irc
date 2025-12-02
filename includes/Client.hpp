@@ -31,6 +31,7 @@ class Client
 		std::string _realname;
 		std::string	_host;
 		std::string	_serv;
+		std::string _message;
 
 		std::vector<Channel*>	_channel;
 		t_mute					_mute;
@@ -56,10 +57,12 @@ class Client
 		void 					setRealName(std::string& name);
 		std::string const&		getHost(void) const;
 		void	 				setHost(std::string& host);
+		std::string const&		getMess(void) const;
+		void 					setMess(std::string& mess);
 		std::string const&		getServ(void) const;
 		void	 				setServ(std::string& host);
 		time_t					getIdle(void) const;
-		void					setLastActivity(void);
+		int					setLastActivity(void);
 	
 		std::vector<Channel*>&	getChannels(void);
 		std::string				getChannelsList();

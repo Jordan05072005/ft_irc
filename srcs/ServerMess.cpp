@@ -49,7 +49,7 @@ void	Server::sendMessUser(Client const& s, Client const& r, std::string const& c
 	nick = s.getNick();
 	if (nick.empty())
 		nick = "*";
-	ss << ":" << nick << "!" << (s.getIdent().empty() ? "*" : s.getIdent()) << "@" << s.getHost() << (cmd.empty() ? "" : (" " + cmd)) << " " << r.getNick() << (body.empty() ? "" : (" :" + body)) << "\r\n";
+	ss << ":" << nick << "!" << (s.getIdent().empty() ? "*" : s.getIdent()) << "@" << s.getHost() << (cmd.empty() ? "" : (" " + cmd)) << (cmd == "QUIT" ? "" : " " + r.getNick()) << (body.empty() ? "" : (" :" + body)) << "\r\n";
 	err_mess = ss.str();
 	send(r.getFd(), err_mess.c_str(), err_mess.size(), 0);
 }

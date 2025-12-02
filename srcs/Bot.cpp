@@ -7,8 +7,8 @@ Bot::Bot(std::string nick, std::string ident, std::string realname)
 	this->_ident = ident;
 	this->_realname = realname;
 	this->_messBadWords = "Warning: inappropriate language.";
-	this->_messBadWords = "Warning: No spam.";
-	this->_messMute = "You are muted for 5 minutes due to inappropriate language";
+	this->_messSpam = "Warning: No spam.";
+	this->_messMute = "You are muted for 5 minutes";
 	this->readFile();
 	return ;
 }
@@ -28,6 +28,7 @@ Bot& Bot::operator=(const Bot& other)
 		this->_realname = other._realname;
 		this->_realname = other._realname;
 		this->_badWords = other._badWords;
+		this->_messSpam = other._messSpam;
 		this->_messBadWords = other._messBadWords;
 		this->_messMute = other._messMute;
 	}
@@ -77,7 +78,7 @@ const std::string& Bot::getMessBadWords(void) const
 
 const std::string& Bot::getMessSpam(void) const
 {
-	return (this->_messBadWords);
+	return (this->_messSpam);
 }
 
 const std::string& Bot::getMessMute(void) const

@@ -118,8 +118,11 @@ void Server::delClient(int index)
 {
 	Client*	tmp = this->_clients[index - 1];
 	std::string cmd = "QUIT";
-
-	this->delAllChannelClient(*tmp, cmd, "Client Quit");
+	std::string m = "Client Quit";
+	
+	if (tmp->getMess().empty())
+		tmp->setMess(m);
+	this->delAllChannelClient(*tmp, cmd, tmp->getMess());
 	close(tmp->getFd()); // close client's socket
 	this->_clients.erase(this->_clients.begin() + (index - 1)); // erase client of array
 	delete tmp;
@@ -167,7 +170,7 @@ void	Server::delAllChannelClient(Client& client, std::string& cmd, std::string m
 		{
 			delete this->_channel[i];
 			this->_channel.erase(this->_channel.begin() + i);
-			return ;
+			i--;
 		}
 	}
 	client.removeAllChannels();

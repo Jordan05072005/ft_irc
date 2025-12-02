@@ -11,6 +11,7 @@ class Bot
 		std::string 				_ident;
 		std::string 				_realname;
 		std::string 				_messBadWords;
+		std::string 				_messSpam;
 		std::string 				_messMute;
 
 	public:

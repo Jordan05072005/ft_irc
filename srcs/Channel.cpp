@@ -211,7 +211,7 @@ void	Channel::addUser(Client& user)
 
 void	Channel::addOperator(Client& user)
 {
-	this->_users.push_back(&user);
+	this->_operators.push_back(&user);
 	return ;
 }
 
@@ -288,7 +288,7 @@ int Channel::checkOperator(const std::string& nick) const
 {
 	for (size_t i = 0; i < this->_operators.size(); i++)
 	{
-		if (this->_users[i]->getNick() == nick)
+		if (this->_operators[i]->getNick() == nick)
 			return (1);
 	}
 	return (0);

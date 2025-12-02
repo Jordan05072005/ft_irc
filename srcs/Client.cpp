@@ -232,8 +232,17 @@ time_t	Client::getIdle(void) const
 	return (now - this->_last_activity);
 }
 
-void	Client::setLastActivity(void)
+int	Client::setLastActivity(void)
 {
 	time_t now = std::time(NULL);
 	this->_last_activity = now;
+	return (1);
+}
+
+std::string const&		Client::getMess(void) const{
+	return (this->_message);
+}
+
+void	Client::setMess(std::string& mess){
+	this->_message = mess;
 }

@@ -230,7 +230,7 @@ int Server::requestHandler(Client& client)
 					if ((err = this->errorState(client.getState(), mess[0], client)))
 						return (1);
 				}
-				else if ((err = (this->*(_cmd[i].pars))(client, mess)))
+				else if ((err = (this->*(_cmd[i].pars))(client, mess)) && client.setLastActivity())
 					return (1);
 			}
 		}
