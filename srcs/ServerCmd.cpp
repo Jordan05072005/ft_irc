@@ -193,7 +193,7 @@ int Server::checkTopic(Client& client, std::vector<std::string>& mess)
 			return (this->sendMessLocal("331", mess[1], client, "No topic is set"), 0);
 		t = channel->getTopic();
 		this->sendMessLocal("332", mess[1], client, t.topic);
-		return (this->sendMessLocal("333", mess[1] + " " + t.modifBy + " " + convertTimeStr(t.time), client, ""), 0);
+		return (this->sendMessLocal("333", mess[1] + " " + t.modifBy + " " + convertToStr(t.time), client, ""), 0);
 	}
 	if (mess[2][0] != ':')
 		message = mess[2];
@@ -325,7 +325,7 @@ int		Server::checkJoin(Client& client, std::vector<std::string>& mess)
 	if (!channel->getTopic().topic.empty())
 	{
 		this->sendMessLocal("332", mess_cpy[1], client, channel->getTopic().topic);
-		this->sendMessLocal("333", mess_cpy[1] + " " + channel->getTopic().modifBy + " " + convertTimeStr(channel->getTopic().time), client, "");
+		this->sendMessLocal("333", mess_cpy[1] + " " + channel->getTopic().modifBy + " " + convertToStr(channel->getTopic().time), client, "");
 	}
 	else
 		this->sendMessLocal("331", mess_cpy[1], client, "No topic is set");
@@ -471,8 +471,17 @@ int		Server::checkMode(Client& client, std::vector<std::string>& mess)
 					}
 					else
 					{
-						channel->setOptUserLimit(true);
-						channel->setUserLimit(std::atoi((*arg).c_str()));
+						unsigned long int tmp = std::strtoul((*arg).c_str(), NULL, 10);
+						if (tmp == 0 || tmp == ULONG_MAX)
+						{
+							is_err = true;
+							this->sendMessLocal("461", mess[0], client, "Not enough parameters");
+						}
+						else
+						{
+							channel->setOptUserLimit(true);
+							channel->setUserLimit(tmp);
+						}
 					}
 				}
 				else if (is_err == false && *it == "+o")
@@ -519,7 +528,7 @@ int		Server::checkMode(Client& client, std::vector<std::string>& mess)
 					else if (is_err == false && channel->checkOperator(*arg))
 						channel->removeOperator(*arg);
 				}
-				else
+				else if (is_err == false)
 				{
 					size_t i;
 					for (i = 0; i < (*it).size(); i++)
@@ -601,7 +610,7 @@ int		Server::checkMode(Client& client, std::vector<std::string>& mess)
 			return (this->sendMessLocal("442", mess[1], client, "You're not on that channel"), 0);
 
 		this->sendMessLocal("324", mess[0] + " " + channel->createStringModes(), client, "");
-		this->sendMessLocal("329", mess[0] + " " + convertTimeStr(channel->getCreationTime()), client, "");
+		this->sendMessLocal("329", mess[0] + " " + convertToStr(channel->getCreationTime()), client, "");
 	}
 	return (0);
 }
@@ -609,7 +618,7 @@ int		Server::checkMode(Client& client, std::vector<std::string>& mess)
 // PART #channel,#channel <reason>
 // :nick!user@host PART #channel :reason
 // :nick!user@host PART #channel
-int		Server::checkPart(Client& client, std::vector<std::string>& mess)
+int		Server::checkPart(Client& client, std::vector<std::string>& mess) 
 {
 	if (mess.size() < 2)
 		return (this->sendMessLocal("461", mess[0], client, "Not enough parameters"), 0);
@@ -643,9 +652,9 @@ int		Server::checkPart(Client& client, std::vector<std::string>& mess)
 	std::string	reason;
 	if (mess_cpy.size() < 3)
 		reason = "";
-	else if (mess_cpy[2][0] != ':')
+	else if (mess_cpy.size() == 3 && mess_cpy[2][0] != ':')
 		reason = mess_cpy[2];
-	else
+	else if (mess_cpy[2][0] == ':')
 	{
 		for (size_t i = 2; i < mess_cpy.size(); i++)
 		{
@@ -655,6 +664,9 @@ int		Server::checkPart(Client& client, std::vector<std::string>& mess)
 		}
 		reason.erase(0, 1);
 	}
+	else
+		return (this->sendMessLocal("461", mess[0], client, "Not enough parameters"), 0);
+
 	this->sendMessChannel(mess_cpy[1], mess_cpy[0] + " " + mess_cpy[1], reason, 0, client);
 
 	client.removeChannel(mess_cpy[1]);
@@ -679,14 +691,21 @@ int		Server::checkNotice(Client& client, std::vector<std::string>& mess)
 	if (mess.size() < 3)
 		return (0);
 	
-	std::string message;
-	for (size_t i = 2; i < mess.size(); i++)
+	std::string	message;
+	if (mess.size() == 3 && mess[2][0] != ':')
+		message = mess[2];
+	else if (mess[2][0] == ':')
 	{
-		if (i != 2)
-			message += ' ';
-		message += mess[i];
+		for (size_t i = 2; i < mess.size(); i++)
+		{
+			if (i != 2)
+				message += ' ';
+			message += mess[i];
+		}
+		message.erase(0, 1);
 	}
-	message.erase(0, 1);
+	else
+		return (0);
 
 	if (this->checkExistClient(mess[1])) // send mess to someone
 	{
@@ -751,6 +770,7 @@ int		Server::checkList(Client& client, std::vector<std::string>& mess)
 
 
 //PRIVMSG <receiver>{,<receiver>} :<text to be sent>
+// TODO : ------------------------------------- trailing -------------------------------------------
 int		Server::checkPrivmsg(Client& client, std::vector<std::string>& mess)
 {
 	std::vector<std::string> argm;

@@ -32,7 +32,7 @@ class Channel
 		std::vector<t_invite>	_invite;
 
 		std::string				_channel_key;
-		size_t					_user_limit;
+		unsigned long int		_user_limit;
 	
 		bool					_i; // Set/Remove Invite-only channel
 		bool					_t; // Set/Remove restrict TOPIC to only operator
@@ -58,8 +58,8 @@ class Channel
 		std::string const&				getChannelKey(void) const;
 		void							setChannelKey(std::string const& channel_key);
 		
-		size_t							getUserLimit(void) const;
-		void							setUserLimit(size_t nb);
+		unsigned long int				getUserLimit(void) const;
+		void							setUserLimit(unsigned long int nb);
 		
 		bool							getOptInviteOnly(void) const;
 		void							setOptInviteOnly(bool opt);

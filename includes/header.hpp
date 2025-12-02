@@ -2,7 +2,7 @@
 # define HEADER_HPP
 
 # include <iostream> // cout, cerr
-# include <cstdlib> // atoi
+# include <cstdlib> // atoi, strtoul
 # include <cstdio> // sprintf
 # include <cctype> // isdigit, isalpha, tolower
 # include <cerrno> // errno
@@ -20,13 +20,16 @@
 # include <ctime> // time_t, time
 # include <csignal> // signal, sigaction
 # include <algorithm> // find
+# include <climits> // ULONG_MAX
 
 std::vector<std::string>	split(const std::string &s, char delimiter);
 std::vector<std::string>	split2(const std::string &s, const std::string &delims);
 void						setup_signals(void);
 std::string					ft_tolower(std::string str);
 std::string					add_to_modestring(std::string const& str, std::string const& mode);
-std::string 				convertTimeStr(time_t t);
+
+template<typename T>
+std::string 				convertToStr(T t);
 
 typedef struct s_warn
 {
@@ -38,5 +41,7 @@ typedef struct s_warn
 # include "Client.hpp"
 # include "Channel.hpp"
 # include "Server.hpp"
+
+# include "utils.tpp"
 
 #endif
