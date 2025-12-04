@@ -61,7 +61,7 @@ bool Bot::checkMessage(const std::string& message)
 	std::vector<std::string> mess = split(message, ' ');
 	for (size_t i = 0; i < mess.size(); i++)
 	{
-		if (std::find(this->_badWords.begin(), this->_badWords.end(), mess[i]) != this->_badWords.end())
+		if (std::find(this->_badWords.begin(), this->_badWords.end(), ft_tolower(mess[i])) != this->_badWords.end())
 			return (1);
 	}
 	return (0);
