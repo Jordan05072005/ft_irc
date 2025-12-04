@@ -2,7 +2,7 @@
 # define  SERVER_HPP
 
 # include "header.hpp"
-# define POOL_TIME 1000
+// # define POOL_TIME 1000
 
 class Client;
 class Bot;
@@ -19,9 +19,9 @@ class Server
 {
 	private :
 		Server(void); // canocical
-		// Server(Server const& copy); // canonical
-		// Server&	operator=(Server const& other); // canonical
-		
+		Server(Server const& copy); // canonical
+		Server&	operator=(const Server& other); // canonical
+	
 		bool					_init;
 		bool 					_close;
 		int						_port_serv; // port donné au constructeur
@@ -88,7 +88,7 @@ class Server
 		
 	public :
 		void 			init(int port, std::string const& password);
-		static Server&	getInstance(void);
+		static		Server&	getInstance(void);
 		void			closeAll(void);
 		void			close_serv(void);
 		~Server(void); // canonical

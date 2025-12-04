@@ -1,11 +1,13 @@
 #include "../includes/header.hpp"
 
 
+
 int	Server::checkUniqueNick(std::string const& nick)
 {
+	std::string nicklower = ft_tolower(nick);
 	for (size_t i = 0; i < this->_clients.size(); i++)
 	{
-		if (this->_clients[i]->getNick() == nick)
+		if (ft_tolower(this->_clients[i]->getNick()) == nicklower)
 			return 1;
 	}
 	return 0;
@@ -13,9 +15,10 @@ int	Server::checkUniqueNick(std::string const& nick)
 
 int Server::checkExistClient(std::string const& nick)
 {
+	std::string nicklower = ft_tolower(nick);
 	for (size_t i = 0; i < this->_clients.size(); i++)
 	{
-		if (this->_clients[i]->getNick() == nick)
+		if (ft_tolower(this->_clients[i]->getNick()) == nicklower)
 			return 1;
 	}
 	return 0;
@@ -101,9 +104,10 @@ int	Server::getIndexChannel(std::string const& name)
 
 Client&	Server::getClient(std::string const& nick)
 {
+	std::string nicklower = ft_tolower(nick);
 	for (size_t i = 0; i < this->_clients.size(); i++)
 	{
-		if (this->_clients[i]->getNick() == nick)
+		if (ft_tolower(this->_clients[i]->getNick()) == nicklower)
 			return (*(this->_clients[i]));
 	}
 	return (*(this->_clients[0])); // TODO : trouver solution pr null

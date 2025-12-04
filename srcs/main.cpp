@@ -12,9 +12,8 @@
 
 #include "../includes/header.hpp"
 
-int	parsing(std::string port, std::string password)
+int	parsing(std::string port)
 {
-	(void)password;
 	for (size_t i = 0; i < port.length(); ++i)
 	{
 		if (std::isdigit(port[i]) == false)
@@ -23,6 +22,8 @@ int	parsing(std::string port, std::string password)
 	return (0);
 }
 
+
+
 int main(int ac, char **av)
 {
 	if (ac != 3)
@@ -30,27 +31,13 @@ int main(int ac, char **av)
 		std::cout << "Usage : <port> <password>" << std::endl;
 		return (1);
 	}
-
 	std::string port = av[1];
 	std::string password = av[2];
-	switch (parsing(port, password)) // * vérifier si sécurité mot de passe à gérer
+	if (parsing(port) == 1)
 	{
-		case 1 :
-		{
-			std::cerr << "Error : invalid port" << std::endl;
-			return (1);
-		}
-
-		case 2 :
-		{
-			std::cerr << "Error : invalid password" << std::endl;
-			return (1);
-		}
-
-		default :
-			break ;
+		std::cerr << "Error : invalid port" << std::endl;
+		return (1);
 	}
-
 	try
 	{
 		Server& serv = Server::getInstance();
@@ -60,6 +47,5 @@ int main(int ac, char **av)
 	{
 		std::cerr << e.what() << std::endl;
 	}
-
 	return (0);
 }

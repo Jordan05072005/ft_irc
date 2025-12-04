@@ -14,6 +14,8 @@ int	Server::checkCap(Client& client, std::vector<std::string>& mess)
 	}
 	else if (mess[1] == "END")
 	{
+		if (client.getState() > 1)
+			return 0;
 		if (!client.getIdent().empty() && !client.getNick().empty())
 		{
 			client.setState(client.getState() + 1);
@@ -88,7 +90,6 @@ int Server::checkQuit(Client& client, std::vector<std::string>& mess)
 	}
 	erasedIrc(message);
 	client.setMess(message);
-	// this->delAllChannelClient(client, mess[0], message);
 	if (client.getState() < 2)
 		return (1);
 	return (1);
@@ -664,7 +665,7 @@ int		Server::checkPart(Client& client, std::vector<std::string>& mess)
 	else
 		return (this->sendMessLocal("461", mess[0], client, "Not enough parameters"), 0);
 
-	this->sendMessChannel(mess_cpy[1], mess_cpy[0] + " " + mess_cpy[1], reason, 0, client);
+	this->sendMessChannel(mess_cpy[1], mess_cpy[0] + " " + mess_cpy[1], reason, 1, client);
 
 	client.removeChannel(mess_cpy[1]);
 	channel->removeUser(client.getNick());
@@ -766,7 +767,7 @@ int		Server::checkList(Client& client, std::vector<std::string>& mess)
 
 
 //PRIVMSG <receiver>{,<receiver>} :<text to be sent>
-// TODO : ------------------------------------- trailing -------------------------------------------
+//PRIVMSG <receiver>{,<receiver>} :
 int		Server::checkPrivmsg(Client& client, std::vector<std::string>& mess)
 {
 	std::vector<std::string> argm;
@@ -775,13 +776,12 @@ int		Server::checkPrivmsg(Client& client, std::vector<std::string>& mess)
 
 	if (mess.size() <= 2 || (mess[2][0] != ':' && mess.size() > 3))
 		return (this->sendMessLocal("461", mess[0], client, "Not enough parameters"), 0);
-	if (mess.size() < 3 || (mess[2].size() == 1 && mess[2][0] == ':'))
+	if (mess.size() < 3 || (mess[2].size() == 1 && mess.size() <= 3 && mess[2][0] == ':'))
 		return (this->sendMessLocal("412", "", client, "No text to send"), 0);
 	if (client.isMute())
 		return (sendMessBot(*this->_bot[0], client, "NOTICE", this->_bot[0]->getMessMute()), 0);
 	if (client.getIdle() < 1)
 	{
-		std::cout << "spam bro" << std::endl;
 		client.addWarn();
 		return (sendMessBot(*this->_bot[0], client, "NOTICE", this->_bot[0]->getMessSpam()), 0);
 	}
@@ -979,6 +979,6 @@ int		Server::checkNote(Client& client, std::vector<std::string>& mess)
 {
 	if (mess.size() != 1)
 		return (this->sendMessBot(*this->_bot[0], client, "NOTICE", "Unknown argument for !note. Usage: !note"), 0);
-	this->sendMessBot(*this->_bot[0], client, "NOTICE", "Met une bonne note ou jte kick tu serv");
+	this->sendMessBot(*this->_bot[0], client, "NOTICE", "Give me a good rating or I'll kick you from the server");
 	return (0);
 }

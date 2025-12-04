@@ -2,6 +2,25 @@
 
 Server::Server(void){}
 
+Server::Server(const Server& other){
+	*this = other;
+}
+
+Server& Server::operator=(const Server& other){
+	if (this != &other){
+		this->_bot = other._bot;
+		this->_port_serv = other._port_serv;
+		this->_password = other._password;
+		this->_init = other._init;
+		this->_fds = other._fds;
+		this->_cmd = other._cmd;
+		this->_close = other._close;
+		this->_clients = other._clients;
+		this->_channel = other._channel;
+	}
+	return (*this);
+}
+
 Server& Server::getInstance(void)
 {
 	static Server instance;
@@ -165,11 +184,6 @@ void Server::run(void)
 			client_fd = accept(this->_fds[0].fd, (sockaddr*)&client_addr, &client_len); // give new socket for new client and fill connection's options of client socket in struct
 			if (client_fd < 0)
 				throw std::runtime_error("Error: acceptance client socket connection");
-			// int flag = 1;
-      //   if (setsockopt(client_fd, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag)) < 0)
-      //       std::perror("setsockopt(TCP_NODELAY)");
-			// if (setsockopt(client_fd, IPPROTO_TCP, TCP_QUICKACK, &flag, sizeof(flag)) < 0)
-			// 	std::perror("setsockopt(TCP_NODELAY)");
 			if (fcntl(client_fd, F_SETFL, O_NONBLOCK) < 0)
 				std::perror("fcntl(O_NONBLOCK)");
 			this->_clients.push_back(new Client(client_fd, client_addr, client_len)); // add of client's socket's data to array
@@ -230,8 +244,9 @@ int Server::requestHandler(Client& client)
 					if ((err = this->errorState(client.getState(), mess[0], client)))
 						return (1);
 				}
-				else if ((err = (this->*(_cmd[i].pars))(client, mess)) && client.setLastActivity())
+				else if ((err = (this->*(_cmd[i].pars))(client, mess)))
 					return (1);
+				client.setLastActivity();
 			}
 		}
 		if (err == -1)

@@ -37,7 +37,6 @@ Client& Client::operator=(const Client& cpy)
 		this->_mute = cpy._mute;
 		this->_last_activity = cpy._last_activity;
 	}
-	// cpy.setFd(-1);
 	return (*this);
 }
 
@@ -122,7 +121,6 @@ void Client::setHost(std::string& host)
 	this->_host = host;
 }
 
-//nick!~ident@host
 
 /*-----------------------------------------------------------------------------------------------*/
 
