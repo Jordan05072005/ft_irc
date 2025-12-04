@@ -200,7 +200,7 @@ void Server::run(void)
 				std::memset(buf,0, sizeof(buf));
 				oct = recv(this->_fds[i].fd, buf, sizeof(buf), 0); // 0 is no flag
 				if (oct <= 0)
-				{
+				{	
 					this->delClient(i--);
 					continue; // beginning of for
 				}

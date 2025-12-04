@@ -279,7 +279,7 @@ int Channel::checkUser(const std::string& nick) const
 	std::string nicklower = ft_tolower(nick);
 	for (size_t i = 0; i < this->_users.size(); i++)
 	{
-		if (ft_tolower(this->_users[i]->getNick()) == nickower)
+		if (ft_tolower(this->_users[i]->getNick()) == nicklower)
 			return (1);
 	}
 	return (0);

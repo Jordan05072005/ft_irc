@@ -829,7 +829,7 @@ int Server::checkNames(Client& client, std::vector<std::string>& mess)
 {
 	std::vector<std::string> channels;
 
-	if (mess.size() == 1)
+	if (mess.size() == 1 || (mess.size() == 2 && mess[1] == "Irc"))
 	{
 		for (size_t i = 0; i < this->_channel.size(); i++)
 		{
