@@ -135,6 +135,7 @@ int	Server::checkKick(Client& client, std::vector<std::string>& mess)
 		delete this->_channel[i];
 		this->_channel.erase(this->_channel.begin() + i);
 	}
+	client.setLastActivity();
 	return (0);
 }
 
@@ -162,6 +163,7 @@ int Server::checkInvite(Client& client, std::vector<std::string>& mess)
 	this->sendMessLocal("341", mess[1] + " " + mess[2], client, "");
 	this->sendMessLocal("", mess[0], *(this->_clients[this->getIndexClient(mess[1])]), mess[2]);
 	channel->addInvite(*(this->_clients[this->getIndexClient(mess[1])]));
+	client.setLastActivity();
 	return (0);
 }
 
@@ -200,6 +202,7 @@ int Server::checkTopic(Client& client, std::vector<std::string>& mess)
 	}
 	erasedIrc(message);
 	channel->setTopic(message, client.getNick());
+	client.setLastActivity();
 	return(this->sendMessChannel(mess[1], mess[0] + " " + mess[1], message, 1, client), 0);
 }
 
@@ -327,6 +330,7 @@ int		Server::checkJoin(Client& client, std::vector<std::string>& mess)
 		this->sendMessLocal("331", mess_cpy[1], client, "No topic is set");
 	this->sendMessLocal("353", "= " + mess_cpy[1], client, channel->createStringUsers());
 	this->sendMessLocal("366", mess_cpy[1], client, "End of NAMES list");
+	client.setLastActivity();
 	return(0);
 }
 
@@ -608,6 +612,7 @@ int		Server::checkMode(Client& client, std::vector<std::string>& mess)
 		this->sendMessLocal("324", mess[0] + " " + channel->createStringModes(), client, "");
 		this->sendMessLocal("329", mess[0] + " " + convertToStr(channel->getCreationTime()), client, "");
 	}
+	client.setLastActivity();
 	return (0);
 }
 
@@ -675,7 +680,7 @@ int		Server::checkPart(Client& client, std::vector<std::string>& mess)
 		delete this->_channel[i];
 		this->_channel.erase(this->_channel.begin() + i);
 	}
-
+	client.setLastActivity();
 	return (0);
 }
 
@@ -819,6 +824,7 @@ int		Server::checkPrivmsg(Client& client, std::vector<std::string>& mess)
 				this->sendMessChannel(argm[i], mess[0] + " " + argm[i], message, 0, client);
 		}
 	}
+	client.setLastActivity();
 	return (0);
 }
 
