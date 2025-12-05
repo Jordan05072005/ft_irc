@@ -722,8 +722,7 @@ int		Server::checkNotice(Client& client, std::vector<std::string>& mess)
 // LIST #channel,#channel
 int		Server::checkList(Client& client, std::vector<std::string>& mess)
 {
-	// this->sendMessLocal("321", "Channel", client, "Users Name");
-
+	this->sendMessLocal("321", "Channel", client, "Users  Name");
 	if (mess.size() > 1)
 	{
 		// separation of many channels into one at a time
