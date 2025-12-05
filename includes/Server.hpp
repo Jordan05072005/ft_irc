@@ -24,12 +24,12 @@ class Server
 		
 		bool					_init;
 		bool 					_close;
-		int						_port_serv; // port donné au constructeur
-		std::string				_password; // mdp donné au constructeur
-		sockaddr_in				_addr; // données à mettre dans le socket principal
+		int						_port_serv;
+		std::string				_password;
+		sockaddr_in				_addr; // data of server's machine socket
 		
-		std::vector<pollfd> 	_fds; // tableau de structre, contient sockets et évènement à surveiller
-		std::vector<Client*> 	_clients; // tableau de classe, gestionnaire des données client
+		std::vector<pollfd> 	_fds; // sockets to look for communication
+		std::vector<Client*> 	_clients;
 		std::vector<Channel*>	_channel;
 		std::vector<Bot*> 		_bot;
 		std::vector<t_cmd>		_cmd;

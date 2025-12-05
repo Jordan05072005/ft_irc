@@ -30,6 +30,9 @@
 
 		-> tcp:127.0.0.1:6687 = open connection tcp socket on local address and port 6687
 
+		ctrl M for carriage return
+		ctrl J for new line
+
 */
 
 
