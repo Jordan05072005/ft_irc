@@ -6,6 +6,10 @@
 class Bot
 {
 	private:
+		Bot(void); // canonical
+		Bot(const Bot& copy); // canonical
+		Bot& operator=(const Bot& other); // canonical
+
 		std::vector<std::string>	_badWords;
 		std::string					_nick;
 		std::string 				_ident;
@@ -14,15 +18,13 @@ class Bot
 		std::string 				_messSpam;
 		std::string 				_messMute;
 
+		void				readFile(void);
+
 	public:
-		Bot(void); // canonical
 		Bot(std::string nick, std::string ident, std::string realname);
-		Bot(const Bot& copy); // canonical
-		Bot& operator=(const Bot& other); // canonical
-		~Bot(void); // canonical
+		virtual ~Bot(void); // canonical
 
 		bool				checkMessage(const std::string& message);
-		void				readFile(void);
 	
 		const std::string&	getMessBadWords(void) const;
 		const std::string&	getMessSpam(void) const;

@@ -1,15 +1,17 @@
 #include "../includes/Bot.hpp"
 
 
+Bot::Bot(void){}
+
 Bot::Bot(std::string nick, std::string ident, std::string realname)
 {
+	this->readFile();
 	this->_nick = nick;
 	this->_ident = ident;
 	this->_realname = realname;
 	this->_messBadWords = "Warning: inappropriate language.";
 	this->_messSpam = "Warning: No spam.";
-	this->_messMute = "You are muted for 5 minutes";
-	this->readFile();
+	this->_messMute = "You are muted for 5 minutes due to inappropriate language";
 	return ;
 }
 
@@ -23,13 +25,12 @@ Bot& Bot::operator=(const Bot& other)
 {
 	if (this != &other)
 	{
+		this->_badWords = other._badWords;
 		this->_nick = other._nick;
 		this->_ident = other._ident;
 		this->_realname = other._realname;
-		this->_realname = other._realname;
-		this->_badWords = other._badWords;
-		this->_messSpam = other._messSpam;
 		this->_messBadWords = other._messBadWords;
+		this->_messSpam = other._messSpam;
 		this->_messMute = other._messMute;
 	}
 	return (*this);

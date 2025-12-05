@@ -23,6 +23,8 @@ typedef struct s_topic
 class Channel
 {
 	private :
+		Channel(Channel const& copy); // canonical
+		Channel&	operator=(Channel const& other); // canonical
 
 		std::time_t				_creationtime;
 		std::string 			_name;
@@ -44,9 +46,7 @@ class Channel
 		Channel(void); // canonical
 		Channel(std::string const& name, Client* creator);
 		Channel(std::string const& name, std::string const& key, Client* creator);
-		Channel(Channel const& copy); // canonical
-		Channel&	operator=(Channel const& other); // canonical
-		~Channel(void); // canonical
+		virtual ~Channel(void); // canonical
 
 
 		std::time_t const&				getCreationTime(void) const;
@@ -74,8 +74,7 @@ class Channel
 		void							setOptUserLimit(bool opt);
 
 		std::vector<Client*> const&		getUsers(void) const;
-		std::string						getUsersCountStr(void) const;
-		size_t							getUsersCountNb(void) const;
+		size_t							getUsersCount(void) const;
 		std::vector<Client*> const&		getOperators(void) const;
 		const std::vector<t_invite>&	getInvite(void) const;
 
@@ -85,8 +84,8 @@ class Channel
 		void							addInvite(Client& client);
 
 		void							removeUser(std::string const& nick);
-		void							removeInvite(void);
 		void							removeOperator(std::string const& nick);
+		void							removeInvite(void);
 
 		void							delInvite(Client& client);
 

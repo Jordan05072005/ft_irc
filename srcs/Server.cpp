@@ -2,21 +2,26 @@
 
 Server::Server(void){}
 
-Server::Server(const Server& other){
+Server::Server(const Server& other)
+{
 	*this = other;
 }
 
-Server& Server::operator=(const Server& other){
-	if (this != &other){
-		this->_bot = other._bot;
+Server& Server::operator=(const Server& other)
+{
+	if (this != &other)
+	{
+		this->_init = other._init;
+		this->_close = other._close;
 		this->_port_serv = other._port_serv;
 		this->_password = other._password;
-		this->_init = other._init;
+		this->_addr = other._addr;
+
 		this->_fds = other._fds;
-		this->_cmd = other._cmd;
-		this->_close = other._close;
 		this->_clients = other._clients;
 		this->_channel = other._channel;
+		this->_bot = other._bot;
+		this->_cmd = other._cmd;
 	}
 	return (*this);
 }
@@ -42,9 +47,10 @@ void	Server::init(int port, std::string const& password)
 	if (!this->_init)
 	{
 		this->_init = true;
-		this->_port_serv = port;
 		this->_close = false;
+		this->_port_serv = port;
 		this->_password.assign(password);
+
 		this->initServ();
 
 		// available commands when not login nor registered
@@ -125,7 +131,7 @@ static pollfd init_pollfd(int fd, short events, short revents)
 // ceating base socket to receive client's connections
 void Server::initServ(void)
 {
-	int opt = 1; //? pk 1
+	int opt = 1;
 
 	this->_fds.push_back(init_pollfd(socket(AF_INET, SOCK_STREAM, 0), POLLIN, 0)); // socket(ipv4, SOCK_STREAM <=> must listen and accept, TCP is default)
 	if (this->_fds[0].fd == -1)
@@ -167,7 +173,7 @@ void Server::run(void)
 	int 				client_fd; // client socket
 
 	char 				buf[512];
-	int 				oct; // nb of octet read by recv
+	int 				byte; // nb of byte read by recv
 
 	this->_bot.push_back(new Bot("bot42", "bot42", "bot42"));
 	while (!this->_close)
@@ -198,13 +204,17 @@ void Server::run(void)
 			if (this->_fds[i].revents & POLLIN)
 			{
 				std::memset(buf,0, sizeof(buf));
-				oct = recv(this->_fds[i].fd, buf, sizeof(buf), 0); // 0 is no flag
-				if (oct <= 0)
-				{	
+				byte = recv(this->_fds[i].fd, buf, sizeof(buf), 0); // 0 is no flag
+				if (byte <= 0)
+				{
 					this->delClient(i--);
 					continue; // beginning of for
 				}
-				this->_clients[i - 1]->addBuf(buf, oct);
+
+				// test lign for fragmented data
+				// std::cout << "buf : \"" << buf << "\"" << std::endl;
+
+				this->_clients[i - 1]->addBuf(buf, byte);
 				if (this->_clients[i - 1]->getBuf().find("\r\n") != std::string::npos && this->requestHandler(*(this->_clients[i - 1])))
 				{
 					this->delClient(i--);
@@ -246,7 +256,6 @@ int Server::requestHandler(Client& client)
 				}
 				else if ((err = (this->*(_cmd[i].pars))(client, mess)))
 					return (1);
-				client.setLastActivity();
 			}
 		}
 		if (err == -1)

@@ -22,9 +22,10 @@ class Client
 		int 		_fd; // client socket
 		sockaddr_in _addr; // connection's option's data
 		socklen_t 	_len; // sockaddr_in size
+		int			_state; // state = 1 -> login, state = 2 -> register
 
 		std::string	_buff;
-		time_t	_last_activity;
+		time_t		_last_activity;
 
 		std::string _nick;
 		std::string _ident;
@@ -35,8 +36,6 @@ class Client
 
 		std::vector<Channel*>	_channel;
 		t_mute					_mute;
-
-		int						_state; // state = 1 -> login, state = 2 -> register
 
 	public :
 		Client(int fd, sockaddr_in addr, socklen_t len); // canonical
@@ -57,15 +56,15 @@ class Client
 		void 					setRealName(std::string& name);
 		std::string const&		getHost(void) const;
 		void	 				setHost(std::string& host);
-		std::string const&		getMess(void) const;
-		void 					setMess(std::string& mess);
 		std::string const&		getServ(void) const;
 		void	 				setServ(std::string& host);
+		std::string const&		getMess(void) const;
+		void 					setMess(std::string& mess);
 		time_t					getIdle(void) const;
-		int					setLastActivity(void);
+		void					setLastActivity(void);
 	
 		std::vector<Channel*>&	getChannels(void);
-		std::string				getChannelsList();
+		std::string				getChannelsList(void);
 		void					addChannel(Channel* channel);
 		void					removeChannel(std::string const& name);
 		void					removeAllChannels(void);
@@ -75,7 +74,7 @@ class Client
 		int 					getWarn(void) const;
 		void 					addWarn(void);
 		void 					resetWarn(void);
-		bool					isMute();
+		bool					isMute(void);
 };
 
 #endif

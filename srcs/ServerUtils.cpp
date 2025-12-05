@@ -1,18 +1,6 @@
 #include "../includes/header.hpp"
 
 
-
-int	Server::checkUniqueNick(std::string const& nick)
-{
-	std::string nicklower = ft_tolower(nick);
-	for (size_t i = 0; i < this->_clients.size(); i++)
-	{
-		if (ft_tolower(this->_clients[i]->getNick()) == nicklower)
-			return 1;
-	}
-	return 0;
-}
-
 int Server::checkExistClient(std::string const& nick)
 {
 	std::string nicklower = ft_tolower(nick);
@@ -26,9 +14,10 @@ int Server::checkExistClient(std::string const& nick)
 
 int	Server::checkExistChannel(std::string const& name)
 {
+	std::string namelower = ft_tolower(name);
 	for (size_t i = 0; i < this->_channel.size(); i++)
 	{
-		if (this->_channel[i]->getName() == name)
+		if (ft_tolower(this->_channel[i]->getName()) == namelower)
 			return (1);
 	}
 	return (0);
@@ -94,23 +83,24 @@ int Server::autorisedRealName(std::string& name)
 
 int	Server::getIndexChannel(std::string const& name)
 {
+	std::string namelower = ft_tolower(name);
 	for (size_t i = 0; i < this->_channel.size(); i++)
 	{
-		if (this->_channel[i]->getName() == name)
+		if (ft_tolower(this->_channel[i]->getName()) == namelower)
 			return (i);
 	}
-	return (0);
+	return (-1);
 }
 
-Client&	Server::getClient(std::string const& nick)
+int	Server::getIndexClient(std::string const& nick)
 {
 	std::string nicklower = ft_tolower(nick);
 	for (size_t i = 0; i < this->_clients.size(); i++)
 	{
 		if (ft_tolower(this->_clients[i]->getNick()) == nicklower)
-			return (*(this->_clients[i]));
+			return (i);
 	}
-	return (*(this->_clients[0])); // TODO : trouver solution pr null
+	return (-1);
 }
 
 
@@ -169,12 +159,11 @@ void	Server::delAllChannelClient(Client& client, std::string& cmd, std::string m
 	for (size_t i = 0; i < this->_channel.size(); i++)
 	{
 		this->_channel[i]->removeUser(client.getNick());
-		this->_channel[i]->removeOperator(client.getNick());
 		if (this->_channel[i]->getUsers().size() == 0)
 		{
 			delete this->_channel[i];
 			this->_channel.erase(this->_channel.begin() + i);
-			i--;
+			return ;
 		}
 	}
 	client.removeAllChannels();
