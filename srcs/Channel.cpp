@@ -13,11 +13,13 @@ Channel& Channel::operator=(Channel const& other)
 {
 	if (this != &other)
 	{
+		this->_creationtime = other._creationtime;
 		this->_name = other._name;
 		this->_topic = other._topic;
 		this->_users = other._users;
 		this->_operators = other._operators;
 		this->_invite = other._invite;
+		
 		this->_channel_key = other._channel_key;
 		this->_user_limit = other._user_limit;
 
@@ -42,7 +44,7 @@ Channel::Channel(std::string const& _name, Client* creator)
 	creator->addChannel(this);
 
 	this->_channel_key = "";
-	this->_user_limit = 0;
+	this->_user_limit = 0; // no limit
 
 	this->_i = false;
 	this->_t = false;
@@ -63,7 +65,7 @@ Channel::Channel(std::string const& _name, std::string const& key, Client* creat
 	creator->addChannel(this);
 
 	this->_channel_key = key;
-	this->_user_limit = 0;
+	this->_user_limit = 0; // no limit
 
 	this->_i = false;
 	this->_t = false;
@@ -176,15 +178,7 @@ std::vector<Client*> const&		Channel::getUsers(void) const
 	return (this->_users);
 }
 
-std::string						Channel::getUsersCountStr(void) const
-{
-	std::stringstream	ss;
-
-	ss << this->_users.size();
-	return (ss.str());
-}
-
-size_t							Channel::getUsersCountNb(void) const
+size_t							Channel::getUsersCount(void) const
 {
 	return (this->_users.size());
 }
@@ -232,9 +226,10 @@ void Channel::addInvite(Client& client)
 
 void	Channel::removeUser(std::string const& nick)
 {
+	std::string nicklower = ft_tolower(nick);
 	for (size_t i = 0; i < this->_users.size(); i++)
 	{
-		if (this->_users[i]->getNick() == nick)
+		if (ft_tolower(this->_users[i]->getNick()) == nicklower)
 			this->_users.erase(this->_users.begin() + i);
 	}
 	this->removeOperator(nick);
@@ -243,9 +238,10 @@ void	Channel::removeUser(std::string const& nick)
 
 void	Channel::removeOperator(std::string const& nick)
 {
+	std::string nicklower = ft_tolower(nick);
 	for (size_t i = 0; i < this->_operators.size(); i++)
 	{
-		if (this->_operators[i]->getNick() == nick)
+		if (ft_tolower(this->_operators[i]->getNick()) == nicklower)
 			this->_operators.erase(this->_operators.begin() + i);
 	}
 	return ;
@@ -263,9 +259,10 @@ void	Channel::removeInvite(void)
 
 void Channel::delInvite(Client &c)
 {
+	std::string nicklower = ft_tolower(c.getNick());
 	for (size_t i = 0; i < this->_invite.size(); i++)
 	{
-		if (this->_invite[i].client->getNick() == c.getNick())
+		if (ft_tolower(this->_invite[i].client->getNick()) == nicklower)
 			this->_invite.erase(this->_invite.begin() + i);
 	}
 }
@@ -290,7 +287,7 @@ int Channel::checkOperator(const std::string& nick) const
 	std::string nicklower = ft_tolower(nick);
 	for (size_t i = 0; i < this->_operators.size(); i++)
 	{
-		if (ft_tolower(this->_operators[i]->getNick()) == nicklower)
+		if (ft_tolower(this->_users[i]->getNick()) == nicklower)
 			return (1);
 	}
 	return (0);

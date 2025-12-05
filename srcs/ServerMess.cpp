@@ -10,6 +10,7 @@ int Server::errorState(int state, std::string const& cmd, Client& client)
 	return (0);
 }
 
+//:ft_irc 451 JOIN :You have not registered
 void Server::sendMessLocal(std::string const& err, std::string const& cmd, Client const& c, std::string const& body)
 {
 	std::string err_mess;
@@ -48,7 +49,7 @@ void	Server::sendMessUser(Client const& s, Client const& r, std::string const& c
 	nick = s.getNick();
 	if (nick.empty())
 		nick = "*";
-	ss << ":" << nick << "!" << (s.getIdent().empty() ? "*" : s.getIdent()) << "@" << s.getHost() << (cmd.empty() ? "" : (" " + cmd)) << (cmd == "QUIT" ? "" : " " + r.getNick()) << (body.empty() ? "" : (" :" + body)) << "\r\n";
+	ss << ":" << nick << "!" << (s.getIdent().empty() ? "*" : s.getIdent()) << "@" << s.getHost() << (cmd.empty() ? "" : (" " + cmd)) << " " << r.getNick() << (body.empty() ? "" : (" :" + body)) << "\r\n";
 	err_mess = ss.str();
 	send(r.getFd(), err_mess.c_str(), err_mess.size(), 0);
 }
@@ -65,6 +66,7 @@ void Server::sendMessGlobal(std::string const& cmd, std::string const& mess, Cli
 	return ;
 }
 
+// Alice JOIN :#general
 void Server::sendMessChannel(std::string const& channel, std::string const& argm, std::string const& mess, int sendme , Client& c)
 {
 	std::stringstream ss;

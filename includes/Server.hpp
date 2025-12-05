@@ -20,20 +20,19 @@ class Server
 	private :
 		Server(void); // canocical
 		Server(Server const& copy); // canonical
-		Server&	operator=(const Server& other); // canonical
-	
+		Server&	operator=(Server const& other); // canonical
+		
 		bool					_init;
 		bool 					_close;
 		int						_port_serv; // port donné au constructeur
 		std::string				_password; // mdp donné au constructeur
+		sockaddr_in				_addr; // données à mettre dans le socket principal
 		
 		std::vector<pollfd> 	_fds; // tableau de structre, contient sockets et évènement à surveiller
 		std::vector<Client*> 	_clients; // tableau de classe, gestionnaire des données client
-		std::vector<Bot*> 		_bot;
-		
-		sockaddr_in				_addr; // données à mettre dans le socket principal
-		std::vector<t_cmd>		_cmd;
 		std::vector<Channel*>	_channel;
+		std::vector<Bot*> 		_bot;
+		std::vector<t_cmd>		_cmd;
 
 		void		initServ(void);
 		void		bindAndListen(sockaddr_in const& addr);
@@ -63,7 +62,6 @@ class Server
 		int			checkStats(Client& client, std::vector<std::string>& mess);
 		int			checkNote(Client& client, std::vector<std::string>& mess);
 
-		int			checkUniqueNick(std::string const& nick);
 		int			checkExistClient(std::string const& nick);
 		int			checkExistChannel(std::string const& name);
 		int			autorisedNick(std::string& name);
@@ -78,7 +76,7 @@ class Server
 		void		sendMessBot(Bot& b, Client const& c, std::string cmd, const std::string& mess);
 	
 		int			getIndexChannel(std::string const& name);
-		Client&		getClient(std::string const& nick);
+		int			getIndexClient(std::string const& nick);
 
 		void		delClient(int index);
 		void		delInvite(void);
@@ -88,10 +86,10 @@ class Server
 		
 	public :
 		void 			init(int port, std::string const& password);
-		static		Server&	getInstance(void);
+		static Server&	getInstance(void);
 		void			closeAll(void);
 		void			close_serv(void);
-		~Server(void); // canonical
+		virtual ~Server(void); // canonical
 
 };
 

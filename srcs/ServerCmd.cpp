@@ -46,7 +46,7 @@ int Server::checkNick(Client& client, std::vector<std::string>& mess)
 		return (this->sendMessLocal("462", "", client, "Unauthorized command (already registered)"), 0);
 	if (mess.size() == 1)
 		return (this->sendMessLocal("431", "", client, "No nickname given"), 0);
-	if (this->checkUniqueNick(mess[1]))
+	if (this->checkExistClient(mess[1]))
 		return (this->sendMessLocal("433", "", client, "Nickname is already in use"), 0);
 	if (!this->autorisedNick(mess[1]))
 		return (this->sendMessLocal("432", mess[1], client, "Erroneous nickname"), 0);
@@ -128,7 +128,6 @@ int	Server::checkKick(Client& client, std::vector<std::string>& mess)
 	erasedIrc(message);
 	this->sendMessChannel(mess[1], mess[0] + " " + mess[1] + " " + mess[2], message, 1, client);
 	channel->removeUser(mess[2]);
-	channel->removeOperator(mess[2]);
 	client.removeChannel(mess[1]);
 	if (channel->getUsers().size() == 0)
 	{
@@ -136,7 +135,6 @@ int	Server::checkKick(Client& client, std::vector<std::string>& mess)
 		delete this->_channel[i];
 		this->_channel.erase(this->_channel.begin() + i);
 	}
-	this->getClient(mess[2]).removeChannel(mess[1]);
 	return (0);
 }
 
@@ -153,7 +151,7 @@ int Server::checkInvite(Client& client, std::vector<std::string>& mess)
 	if (!this->checkExistChannel(mess[2]) && err++)
 		this->sendMessLocal("403", mess[2], client, "No such channel");
 	if (err > 0)
-			return 0;
+		return 0;
 	channel = this->_channel[this->getIndexChannel(mess[2])];
 	if (!channel->checkUser(client.getNick()))
 		return (this->sendMessLocal("442", mess[2], client, "You're not on that channel"), 0);
@@ -162,8 +160,8 @@ int Server::checkInvite(Client& client, std::vector<std::string>& mess)
 	if (channel->checkUser(mess[1]))
 		return (this->sendMessLocal("443", client.getNick() + " " + mess[1] + " " + mess[2], client, "is already on channel"), 0);
 	this->sendMessLocal("341", mess[1] + " " + mess[2], client, "");
-	this->sendMessLocal("", mess[0], this->getClient(mess[1]), mess[2]);
-	channel->addInvite(this->getClient(mess[1]));
+	this->sendMessLocal("", mess[0], *(this->_clients[this->getIndexClient(mess[1])]), mess[2]);
+	channel->addInvite(*(this->_clients[this->getIndexClient(mess[1])]));
 	return (0);
 }
 
@@ -270,9 +268,9 @@ int		Server::checkJoin(Client& client, std::vector<std::string>& mess)
 		if (!is_name_ok(mess_cpy[1]))
 			return (this->sendMessLocal("476", mess_cpy[1], client, "Bad Channel Mask"), 0);
 		if (mess_cpy.size() == 3)
-			this->_channel.push_back(new Channel(ft_tolower(mess_cpy[1]), mess_cpy[2], &client));
+			this->_channel.push_back(new Channel(mess_cpy[1], mess_cpy[2], &client));
 		else
-			this->_channel.push_back(new Channel(ft_tolower(mess_cpy[1]), &client));
+			this->_channel.push_back(new Channel(mess_cpy[1], &client));
 		channel = this->_channel[this->_channel.size() - 1];
 		is_created = true;
 	}
@@ -307,13 +305,13 @@ int		Server::checkJoin(Client& client, std::vector<std::string>& mess)
 		return (this->sendMessLocal("475", mess_cpy[1], client, "Cannot join channel (+k)"), 0);
 
 	// check user limit
-	if (!is_created && channel->getOptUserLimit() == true && channel->getUsersCountNb() >= channel->getUserLimit())
+	if (!is_created && channel->getOptUserLimit() == true && channel->getUsersCount() >= channel->getUserLimit())
 		return (this->sendMessLocal("471", mess_cpy[1], client, "Cannot join channel (+l)"), 0);
 
 	// welcome messages
 	if (!is_created)
 	{
-		client.addChannel(this->_channel[this->getIndexChannel(mess_cpy[1])]);
+		client.addChannel(channel);
 		channel->addUser(client);
 	}
 
@@ -328,7 +326,7 @@ int		Server::checkJoin(Client& client, std::vector<std::string>& mess)
 	else
 		this->sendMessLocal("331", mess_cpy[1], client, "No topic is set");
 	this->sendMessLocal("353", "= " + mess_cpy[1], client, channel->createStringUsers());
-	this->sendMessLocal("366", mess_cpy[1], client, "End of /NAMES list");
+	this->sendMessLocal("366", mess_cpy[1], client, "End of NAMES list");
 	return(0);
 }
 
@@ -495,7 +493,7 @@ int		Server::checkMode(Client& client, std::vector<std::string>& mess)
 						this->sendMessLocal("441", *arg + " " + mess[1], client, "They aren't on that channel");
 					}
 					else if (is_err == false && !channel->checkOperator(*arg))
-						channel->addOperator(this->getClient(*arg));
+						channel->addOperator(*(this->_clients[this->getIndexClient(*arg)]));
 				}
 				else if (*it == "-i")
 					channel->setOptInviteOnly(false);
@@ -669,6 +667,7 @@ int		Server::checkPart(Client& client, std::vector<std::string>& mess)
 
 	client.removeChannel(mess_cpy[1]);
 	channel->removeUser(client.getNick());
+
 	// check if channel empty
 	if (channel->getUsers().size() == 0)
 	{
@@ -706,7 +705,7 @@ int		Server::checkNotice(Client& client, std::vector<std::string>& mess)
 
 	if (this->checkExistClient(mess[1])) // send mess to someone
 	{
-		this->sendMessUser(client, this->getClient(mess[1]), mess[0], message);
+		this->sendMessUser(client, *(this->_clients[this->getIndexClient(mess[1])]), mess[0], message);
 	}
 	else if (this->checkExistChannel(mess[1])) // send mess to channel
 	{
@@ -734,9 +733,9 @@ int		Server::checkList(Client& client, std::vector<std::string>& mess)
 			{
 				channel = this->_channel[this->getIndexChannel(mess_cpy[1].substr(0, mess_cpy[1].find(',')))];
 				if (channel->getTopic().topic.empty())
-					this->sendMessLocal("322", channel->getName() + " " + channel->getUsersCountStr(), client, " ");
+					this->sendMessLocal("322", channel->getName() + " " + convertToStr(channel->getUsersCount()), client, "  ");
 				else
-					this->sendMessLocal("322", channel->getName() + " " + channel->getUsersCountStr(), client, channel->getTopic().topic);
+					this->sendMessLocal("322", channel->getName() + " " + convertToStr(channel->getUsersCount()), client, channel->getTopic().topic);
 			}
 			mess_cpy[1] = mess_cpy[1].substr(mess_cpy[1].find(',') + 1);
 		}
@@ -744,9 +743,9 @@ int		Server::checkList(Client& client, std::vector<std::string>& mess)
 		{
 			channel = this->_channel[this->getIndexChannel(mess_cpy[1])];
 			if (channel->getTopic().topic.empty())
-				this->sendMessLocal("322", channel->getName() + " " + channel->getUsersCountStr(), client, " ");
+				this->sendMessLocal("322", channel->getName() + " " + convertToStr(channel->getUsersCount()), client, "  ");
 			else
-				this->sendMessLocal("322", channel->getName() + " " + channel->getUsersCountStr(), client, channel->getTopic().topic);
+				this->sendMessLocal("322", channel->getName() + " " + convertToStr(channel->getUsersCount()), client, channel->getTopic().topic);
 		}
 	}
 	else
@@ -754,19 +753,18 @@ int		Server::checkList(Client& client, std::vector<std::string>& mess)
 		for (std::vector<Channel*>::const_iterator	it = this->_channel.begin(); it != this->_channel.end(); it++)
 		{
 			if ((*it)->getTopic().topic.empty())
-				this->sendMessLocal("322", (*it)->getName() + " " + (*it)->getUsersCountStr(), client, " ");
+				this->sendMessLocal("322", (*it)->getName() + " " + convertToStr((*it)->getUsersCount()), client, "  ");
 			else
-				this->sendMessLocal("322", (*it)->getName() + " " + (*it)->getUsersCountStr(), client, (*it)->getTopic().topic);
+				this->sendMessLocal("322", (*it)->getName() + " " + convertToStr((*it)->getUsersCount()), client, (*it)->getTopic().topic);
 		}
 	}
 
-	this->sendMessLocal("323", "", client, "End of /LIST");
+	this->sendMessLocal("323", "", client, "End of LIST");
 	return (0);
 }
 
 
 //PRIVMSG <receiver>{,<receiver>} :<text to be sent>
-//PRIVMSG <receiver>{,<receiver>} :
 int		Server::checkPrivmsg(Client& client, std::vector<std::string>& mess)
 {
 	std::vector<std::string> argm;
@@ -809,7 +807,7 @@ int		Server::checkPrivmsg(Client& client, std::vector<std::string>& mess)
 			if (!this->checkExistClient(argm[i]))
 				this->sendMessLocal("401", argm[i], client, "No such nick/channel");
 			else
-				this->sendMessUser(client, this->getClient(argm[i]), mess[0], message);
+				this->sendMessUser(client, *(this->_clients[this->getIndexClient(argm[i])]), mess[0], message);
 		}
 		else
 		{
@@ -875,12 +873,13 @@ int		Server::checkWho(Client& client, std::vector<std::string>& mess)
 			this->sendMessLocal("403", channels[i], client, "No such channel");
 		else if (channels[i][0] != '#' && !this->checkExistClient(channels[i]))
 			this->sendMessLocal("401", channels[i], client, "No such nick");
-		else if (channels[i][0] != '#'){
-			this->sendMessLocal("352", "* " + this->getClient(channels[i]).getIdent() + " " +
-				this->getClient(channels[i]).getHost() + " " + 
-				this->getClient(channels[i]).getServ() + " " + 
-				this->getClient(channels[i]).getNick() + " H", client, "0 " + 
-				this->getClient(channels[i]).getRealName());
+		else if (channels[i][0] != '#')
+		{
+			this->sendMessLocal("352", "* " + this->_clients[this->getIndexClient(channels[i])]->getIdent() + " " +
+				this->_clients[this->getIndexClient(channels[i])]->getHost() + " " + 
+				this->_clients[this->getIndexClient(channels[i])]->getServ() + " " + 
+				this->_clients[this->getIndexClient(channels[i])]->getNick() + " H", client, "0 " + 
+				this->_clients[this->getIndexClient(channels[i])]->getRealName());
 			this->sendMessLocal("315", channels[i], client, "End of /WHO list");
 		}
 		else
@@ -929,9 +928,9 @@ int		Server::checkWhois(Client& client, std::vector<std::string>& mess)
 		return (this->sendMessLocal("431", mess[0], client, "No nickname given") , 0);
 	if (!this->checkExistClient(mess[1]))
 		return (this->sendMessLocal("401", mess[1], client, "No such nick") , 0);
-	c = &this->getClient(mess[1]);
-	this->sendMessLocal("311", c->getNick() + " ~" + c->getIdent() + " " + c->getHost() + " *" , client, c->getRealName());
-	this->sendMessLocal("312", c->getNick() + " " + c->getHost() , client, "IRC42 Server");
+	c = this->_clients[this->getIndexClient(mess[1])];
+	this->sendMessLocal("311", c->getNick() + " ~" + c->getIdent() + " " + c->getHost() + " * " , client, c->getRealName());
+	this->sendMessLocal("312", c->getNick() + " " + c->getHost() + " " , client, "IRC42 Server");
 	ss << c->getNick() << " " << c->getIdle();
 	this->sendMessLocal("317", ss.str(), client, "seconds idle");
 	this->sendMessLocal("319", c->getNick() , client, c->getChannelsList());

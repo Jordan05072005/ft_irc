@@ -10,12 +10,12 @@ Client::Client(int fd, sockaddr_in addr, socklen_t len) : _fd(fd), _addr(addr), 
 	this->_host = ip_str;
 	this->_serv = "irc.42.fr";
 	this->_buff = "";
+	this->_last_activity = std::time(NULL);
 	this->_mute.warn = 0;
 	this->_mute.mute = false;
-	this->_last_activity = std::time(NULL);
 }
 
-Client::Client(const Client& cpy) : _state(1)
+Client::Client(const Client& cpy)
 {
 	*this = cpy;
 }
@@ -25,17 +25,22 @@ Client& Client::operator=(const Client& cpy)
 	if (this != &cpy)
 	{
 		this->_fd = cpy._fd;
-		this->_buff = cpy._buff;
-		this->_nick = cpy._nick;
 		this->_addr = cpy._addr;
 		this->_len = cpy._len;
 		this->_state = cpy._state;
-		this->_channel = cpy._channel;
-		this->_realname = cpy._realname;
-		this->_ident = cpy._ident;
-		this->_serv = cpy._serv;
-		this->_mute = cpy._mute;
+
+		this->_buff = cpy._buff;
 		this->_last_activity = cpy._last_activity;
+
+		this->_nick = cpy._nick;
+		this->_ident = cpy._ident;
+		this->_realname = cpy._realname;
+		this->_host = cpy._host;
+		this->_serv = cpy._serv;
+		this->_message = cpy._message;
+
+		this->_channel = cpy._channel;
+		this->_mute = cpy._mute;
 	}
 	return (*this);
 }
@@ -67,7 +72,12 @@ std::string const& Client::getBuf(void) const
 
 void Client::addBuf(char *buf, int len)
 {
-	this->_buff.append(buf, len); 
+	for (int i = 0; i < len; i++)
+	{
+		if (buf[i] >= 32 || buf[i] == 13 || buf[i] == 10 || buf[i] == 0) // printable || carriage return || new line || NUL
+			this->_buff += buf[i]; 
+	}
+	return ;
 }
 
 void Client::resetBuf(void)
@@ -121,6 +131,7 @@ void Client::setHost(std::string& host)
 	this->_host = host;
 }
 
+//nick!~ident@host
 
 /*-----------------------------------------------------------------------------------------------*/
 
@@ -153,9 +164,10 @@ void	Client::addChannel(Channel* channel)
 
 void	Client::removeChannel(std::string const& name)
 {
+	std::string namelower = ft_tolower(name);
 	for (size_t i = 0; i < this->_channel.size(); i++)
 	{
-		if (this->_channel[i]->getName() == name)
+		if (ft_tolower(this->_channel[i]->getName()) == namelower)
 			this->_channel.erase(this->_channel.begin() + i);
 	}
 	return ;
@@ -230,17 +242,18 @@ time_t	Client::getIdle(void) const
 	return (now - this->_last_activity);
 }
 
-int	Client::setLastActivity(void)
+void	Client::setLastActivity(void)
 {
 	time_t now = std::time(NULL);
 	this->_last_activity = now;
-	return (1);
 }
 
-std::string const&		Client::getMess(void) const{
+std::string const&		Client::getMess(void) const
+{
 	return (this->_message);
 }
 
-void	Client::setMess(std::string& mess){
+void	Client::setMess(std::string& mess)
+{
 	this->_message = mess;
 }
