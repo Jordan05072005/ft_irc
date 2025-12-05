@@ -910,21 +910,21 @@ int		Server::checkWho(Client& client, std::vector<std::string>& mess)
 	:irc.example.com 317 <requester> <nickname> <seconds idle> :seconds idle
 
 
-	<seconds idle> → temps depuis la dernière activité du client en secondes
+	<seconds idle> → seconds since last activity
 
 	4️⃣ RPL_WHOISCHANNELS — 319
 	:irc.example.com 319 <requester> <nickname> :<channel list>
 
 
-	<channel list> → canaux dans lesquels l’utilisateur est actuellement connecté, séparés par des espaces
+	<channel list> → user's channel list separated by spaces
 
 	5️⃣ RPL_ENDOFWHOIS — 318
 	:irc.example.com 318 <requester> <nickname> :End of WHOIS list
 
 
-	Terminer la réponse WHOIS, obligatoire
+	End WHOIS indication response, obligatory
 
-	<nickname> → pseudo interrogé
+	<nickname> → user targeted
 */
 int		Server::checkWhois(Client& client, std::vector<std::string>& mess)
 {
